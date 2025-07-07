@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <title>아이작_ver 소개</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+  <!-- 풀 스크린이 아닐 때 보여줄 모달 -->
+  <div class="full_screen_alarm_modal">
+    <div class="modal-inner">
+      <h4>전체화면으로 플레이 해주세요!</h4>
+    </div>
+  </div>
+
+
+  <!-- 찢어진 책 페이지 표현 / 화면을 꽉 채우는 -->
+  <main>
+    <div id="wrapper">
+      <!-- 컷신 별 소품 효과 -->
+      <div class="scene_prop sunlight_wrapper">
+        <div class="sunlight"></div>
+      </div>
+      <div class="scene_prop black_screen_wrapper">
+        <div class="black_screen"></div>
+      </div>
+
+      <div class="book_container">
+        <div class="book_page">
+          <!-- svg로 path 그려서 각 drawing에 전부 애니메이션 할당하기 -->
+          <div class="drawing_1"></div>
+          <div class="drawing_2"></div>
+          <div class="drawing_3"></div>
+          <div class="drawing_4"></div>
+          <div class="drawing_5"></div>
+          <div class="drawing_6"></div>
+          <div class="drawing_7"></div>
+          <div class="drawing_8"></div>
+          <div class="drawing_9"></div>
+          <div class="drawing_10"></div>
+          <div class="drawing_11"></div>
+        </div>
+      </div>
+      <div class="narration_container">
+        <div class="narrate"></div>
+        <div class="choice_container">
+          <button class="choice_1 choice_el"></button>
+          <button class="choice_2 choice_el"></button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="result_wrapper">
+      <div class="result_container">
+        <div class="result_el"></div>
+        <div class="result_el"></div>
+        <div class="result_el"></div>
+        <div class="result_el"></div>
+        <div class="result_el"></div>
+        <div class="result_el"></div>
+      </div>
+    </div>
+  </main>
+</body>
+
+<script>
+
+</script>
+<script src="./src/script.js"></script>
+
+</html>
+
+
+<!-- 컨텐츠 플로우 작성
+  기본적으로 컨텐츠 효과 및 배경 참고는 아이작 인트로 컷신임.
+  중간중간 선택지가 나오는데 선택지에 따라 컨텐츠 흐름이 달라짐. -- 알고리즘 작성하여 적용시키기
+  
+  결말 페이지 ( 결과 페이지 ) -- 컷신 장면처럼 여러 개 인덱스 겹쳐놓기 
+  -> 마우스 휠 아래로 할 시 아래 방향으로 촤라락 펼쳐지는 효과와 함께 결과 페이지 컨텐츠 펼치기
+-->

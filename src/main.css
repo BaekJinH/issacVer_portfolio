@@ -1,0 +1,830 @@
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+}
+
+[inert] {
+  pointer-events: none;
+  cursor: default;
+}
+
+[inert],
+[inert] * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 뒤로가기 버튼 스타일 */
+.back_btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid white;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-family: 'LanaPixel', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 200;
+}
+
+.back_btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.back_btn:active {
+  transform: scale(0.95);
+}
+
+.back_btn:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+main {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+main.portfolio .dice_wrapper {
+  transform: translateX(100%);
+}
+
+main.about .dice_wrapper {
+  transform: translateX(-100%);
+}
+
+main.contact .dice_wrapper {
+  transform: translateY(100%);
+}
+
+main.blog .dice_wrapper {
+  transform: translateY(-100%);
+}
+
+main.restart .restart_wrapper {
+  opacity: 1;
+  z-index: 999;
+}
+
+/* section이 활성화되었을 때 option wrapper 클릭 비활성화 */
+main.portfolio .select_options_wrapper,
+main.about .select_options_wrapper,
+main.contact .select_options_wrapper,
+main.blog .select_options_wrapper {
+  pointer-events: none;
+}
+
+main.restart {}
+
+.dice_wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.2s ease-in-out;
+
+}
+
+.select_options_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2.85rem;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  /* justify-content: center; */
+  padding-top: 11.5rem;
+  position: absolute;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  background: url(./image/main_menu_bg_resized_1920.png) no-repeat center center / cover;
+}
+
+.select_options_wrapper .select_option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.select_options_wrapper .select_option button {
+  position: relative;
+  font-size: 7.25rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.08rem;
+  border: none;
+  background-color: transparent;
+  transform-origin: center;
+  transform: rotate(356deg);
+  margin-top: -2rem
+}
+
+.select_options_wrapper .select_option button:before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 2.45rem;
+  width: 2.8rem;
+  height: 2.25rem;
+}
+
+.select_options_wrapper .select_option button:focus {
+  border: 0;
+  outline: none;
+}
+
+.select_options_wrapper .select_option button:focus:before {
+  background-color: red;
+}
+
+
+main .keyboard_info_text {
+  position: absolute;
+  bottom: 17rem;
+  right: 20.5rem;
+  text-align: center;
+  z-index: 999;
+  transform: rotate(339deg);
+}
+
+main .keyboard_info_text p {
+  text-align: left;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+main .keyboard_info_text br+span {
+  display: block;
+  transform: translateY(1.2rem)
+}
+
+/* 옵션 클릭 시 나올 메뉴들 */
+main section {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  transition: transform 0.3s ease-in-out;
+  z-index: 1
+}
+
+/* 포트폴리오 */
+.portfolio_wrapper {
+  background-color: #000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-100%);
+}
+
+.portfolio_wrapper .content_list_viewer {
+  max-height: calc(8 * 3rem);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.portfolio_wrapper .content_list {
+  transition: transform 0.3s ease;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portfolio_wrapper .content_list li {
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.portfolio_wrapper .content_list li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.portfolio_wrapper .content_list li.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffff00;
+}
+
+.portfolio_wrapper .content_list li:focus {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffff00;
+}
+
+
+/* 자소서 */
+.about_wrapper {
+  background-color: #333;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(100%);
+}
+
+.about-wrapper h2 {
+  position: relative;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.about-wrapper h2 span {
+  display: inline-block;
+  transform-origin: center;
+  font-size: 5rem;
+  letter-spacing: 0.12rem;
+}
+
+.about-wrapper h2 span:nth-child(1) {
+  transform: rotate(356deg);
+}
+
+.about-wrapper h2 span:nth-child(2) {
+  transform: rotate(353deg);
+}
+
+.about-wrapper h2 span:nth-child(3) {
+  transform: rotate(358deg);
+}
+
+/* About 섹션 롤링 캐러셀 스타일 */
+.about_inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5rem;
+}
+
+.about_content_slide_wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 40rem;
+  perspective: 1000px;
+  overflow: hidden;
+}
+
+.about_content {
+  position: absolute;
+  width: 20rem;
+  height: 12rem;
+  /* 슬라이드 너비 조절 */
+  opacity: 0;
+  transform: scale(0.7);
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  pointer-events: none;
+  /* 보이지 않을 때 클릭 방지 */
+  border: 2px solid #ddd;
+  /* 예시 스타일 */
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  outline: none;
+  /* 포커스 시 기본 아웃라인 제거 */
+}
+
+.about_content .floating_info_text {
+  position: absolute;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  top: calc(100% + 3rem);
+  left: 0;
+  width: 100%;
+  opacity: 0;
+}
+
+/* 포커스 시 커스텀 아웃라인 */
+.about_content:focus-visible {
+  box-shadow: 0 0 0 3px skyblue;
+}
+
+/* 중앙 활성 슬라이드 */
+.about_content.active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.about_content.active .floating_info_text {
+  animation: floatingSmoke .8s ease-in-out forwards;
+}
+
+@keyframes floatingSmoke {
+  0% {
+    filter: blur(20px);
+    opacity: 0;
+  }
+
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+/* 이전 슬라이드 (왼쪽) */
+.about_content.prev {
+  opacity: 0.6;
+  transform: translateX(-20rem) scale(0.8);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* 다음 슬라이드 (오른쪽) */
+.about_content.next {
+  opacity: 0.6;
+  transform: translateX(20rem) scale(0.8);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+
+/* 컨택 */
+.contact_wrapper {
+  background-color: #666;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-100%);
+  overflow: hidden;
+}
+
+.contact_space_container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.detail_view_txt {
+  position: absolute;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* 디테일 뷰가 활성화되었을 때 */
+.detail_view_txt.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 디테일 뷰 리스트 */
+.detail_view_txt ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.detail_view_txt li {
+  padding: 0.5rem 0;
+  opacity: 0;
+  /* 초기에는 투명하게 */
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+/* 각 li 안의 글자(span)는 위치 계산을 위해 inline-block으로 설정 */
+.detail_view_txt li span {
+  display: inline-block;
+}
+
+/* 디테일 뷰 활성 시 li 나타나는 애니메이션 */
+.detail_view_txt.visible li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 각 li에 지연시간을 줘서 순차적으로 나타나게 함 (JS에서 설정) */
+
+/* 애니메이션을 위해 임시로 생성되는 글자 복제본 스타일 */
+.letter-clone {
+  position: fixed;
+  /* 화면 전체를 기준으로 위치 잡기 위함 */
+  pointer-events: none;
+  color: #fff;
+  font-weight: 700;
+  will-change: transform;
+  /* 애니메이션 성능 최적화 */
+  transition: transform 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.8s;
+}
+
+/* 링 -> 리스트로 이동할 때의 투명도 변화 */
+.letter-clone.to-detail {
+  opacity: 0;
+}
+
+/* 리스트 -> 링으로 이동할 때의 투명도 변화 */
+.letter-clone.to-ring {
+  transition-duration: 0.6s;
+  opacity: 1 !important;
+}
+
+.contact_wrapper .detail_view_btn {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 3rem;
+  width: 100%;
+}
+
+main.contact .contact_wrapper .detail_view_btn p span {
+  opacity: 0;
+  visibility: hidden;
+  animation: blink .5s ease-in-out forwards;
+}
+
+main.contact .contact_wrapper .detail_view_btn p span:nth-child(1) {
+  animation-delay: .5s;
+}
+
+main.contact .contact_wrapper .detail_view_btn p span:nth-child(2) {
+  animation-delay: .7s;
+}
+
+main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
+  animation-delay: .9s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  100% {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.contact_center_text {
+  position: absolute;
+  z-index: 100;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  letter-spacing: 0.2em;
+}
+
+.contact_ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  transform-style: preserve-3d;
+}
+
+.contact_ring span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #fff;
+  font-weight: 700;
+  transform-origin: center;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  transition: all 0.1s ease;
+  will-change: transform, opacity, filter;
+}
+
+.contact_ring:nth-child(2) span {
+  color: #ff6b6b;
+  font-size: 2.1rem;
+  z-index: 999;
+}
+
+.contact_ring:nth-child(3) span {
+  color: #4ecdc4;
+  font-size: 1.9rem;
+  z-index: 888;
+}
+
+.contact_ring:nth-child(4) span {
+  color: #45b7d1;
+  font-size: 1.75rem;
+  z-index: 777;
+}
+
+/* 진입 애니메이션 클래스 */
+.contact_ring span.entering {
+  animation: spanEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 퇴장 애니메이션 클래스 */
+.contact_ring span.exiting {
+  animation: spanExit 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+/* 초기 상태에서 span들을 숨김 */
+.contact_ring span.preparing {
+  transform: translateY(100vh);
+  opacity: 0;
+}
+
+.contact_wrapper .back_btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 200;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255 ㅋ-, 255, 0.3);
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.contact_wrapper .back_btn:hover,
+.contact_wrapper .back_btn:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 블로그 */
+.blog_wrapper {
+  background-color: #999;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(100%);
+  padding: 1rem 1.15rem;
+}
+
+.blog_wrapper .blog_inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blog_wrapper .ttl {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.2em;
+}
+
+.blog_wrapper .screen_wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.blog_wrapper .screen_wrapper:before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  border: .5rem solid #111;
+}
+
+.blog_wrapper .screen_wrapper:after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 3rem);
+  height: calc(100% - 3rem);
+  border-radius: 1rem;
+  border: .5rem solid #111;
+}
+
+
+
+#task_bar {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 3.2rem);
+  height: 3.5rem;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+#task_bar .window_wrapper.window_open_btn {
+  height: 100%;
+  aspect-ratio: 1;
+}
+
+#task_bar .search_wrapper {
+  width: 20rem;
+  height: 100%;
+  background-color: #fff;
+}
+
+#task_bar .search_wrapper input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+}
+
+#task_bar ul {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+#task_bar ul li {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1;
+  background-color: red;
+}
+
+/* 리스타트 */
+.restart_wrapper {
+  background-color: #000;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.5s ease-in-out, z-index 0.5s ease-in-out;
+}
+
+.restart_inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.restart_inner span {
+  position: relative;
+  font-size: 10rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-block;
+  color: transparent;
+  /* 숨김 */
+}
+
+/* 실제 보이는 문자는 pseudo-element 로 삽입 */
+.restart_inner span::before,
+.restart_inner span::after {
+  content: attr(data-origin);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 1;
+  animation: flicker 0.3s steps(1) infinite;
+  transform-origin: center;
+  color: rgb(170, 170, 170);
+}
+
+.restart_inner span::before {
+  transform: rotate(357deg);
+}
+
+/* before 는 data-origin, after 는 data-alt */
+.restart_inner span::after {
+  content: attr(data-alt);
+  animation-delay: 0.15s;
+  transform: rotate(359deg);
+  /* 절반 만큼 위상(딜레이) 이동 */
+}
+
+/* 깜빡임 keyframe */
+@keyframes flicker {
+
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+
+
+/* 반응형 -- 풀사이즈 */
+@media (max-height:968px) {
+  .select_options_wrapper {
+    padding-top: 7.5rem;
+  }
+
+  main .keyboard_info_text {
+    bottom: 13rem;
+    right: 21rem;
+    transform: rotate(337deg);
+  }
+}
+
+/* 컨택트 진입/퇴장 애니메이션 */
+@keyframes spanEnter {
+  0% {
+    transform: translate3d(var(--final-x, 0px), calc(var(--final-y, 0px) + 100vh), 0) scale(0.8);
+    opacity: 0;
+  }
+
+  70% {
+    transform: translate3d(var(--final-x, 0px), calc(var(--final-y, 0px) - 20px), 0) scale(1.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(var(--final-x, 0px), var(--final-y, 0px), 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spanExit {
+  0% {
+    transform: translate3d(var(--start-x), var(--start-y), 0) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(var(--start-x), 120vh, 0) scale(0.5);
+    opacity: 0;
+  }
+}

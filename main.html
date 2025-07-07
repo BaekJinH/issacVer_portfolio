@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Baek's Result</title>
+  <link rel="stylesheet" href="./src/style.css">
+  <link rel="stylesheet" href="./src/main.css">
+  <script src="./src/main.js" defer></script>
+</head>
+
+<body>
+  <main>
+    <div class="dice_wrapper">
+      <ul class="select_options_wrapper">
+        <li class="select_option">
+          <button class="portfolio">PORTFOLIO</button>
+        </li>
+        <li class="select_option">
+          <button class="about">ABOUT</button>
+        </li>
+        <li class="select_option">
+          <button class="contact">CONTACT</button>
+        </li>
+        <li class="select_option">
+          <button class="blog">BLOG</button>
+        </li>
+        <li class="select_option">
+          <button class="restart">RESTART</button>
+        </li>
+      </ul>
+
+      <!-- keyboard info text -->
+      <div class="keyboard_info_text">
+        <p>
+          <span>←</span>
+          <span>→</span>
+          <span>↑</span>
+          <span>↓</span>
+          <span>ENTER</span>
+          <br />
+          <span>방향키, 키보드로<br>조작이 가능해요!</span>
+        </p>
+      </div>
+
+      <!-- 왼쪽 메뉴 / 작업물 포폴 -->
+      <section class="portfolio_wrapper">
+        <div class="portfolio_inner">
+          <button class="back_btn" data-back="true">← 뒤로가기</button>
+          <h2>PORTFOLIO</h2>
+          <div class="portfolio_contents">
+            <div class="content_list_viewer">
+              <ul class="content_list">
+                <li></li>
+              </ul>
+            </div>
+            <div class="content_thumbnail">
+              <a href="#none" target="_blank"></a>
+            </div>
+          </div>
+          <span class="desc">게시된 작업물 외에도 다수의 유지보수 및 개편 작업 진행</span>
+        </div>
+      </section>
+
+      <!-- 오른쪽 메뉴 / 자소서-->
+      <section class="about_wrapper">
+        <div class="about_inner">
+          <button class="back_btn" data-back="true">← 뒤로가기</button>
+          <h2><span>Who</span> <span>Am</span> <span>I?</span></h2>
+          <div class="about_content_slide_wrapper">
+            <div class="about_content">
+              <div class="profile">test_txt1</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+            <div class="about_content">
+              <div class="profile">test_txt2</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+            <div class="about_content">
+              <div class="profile">test_txt3 (초기 중앙)</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+            <div class="about_content">
+              <div class="profile">test_txt4</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+            <div class="about_content">
+              <div class="profile">test_txt5</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+            <div class="about_content">
+              <div class="profile">test_txt6</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+            <div class="about_content">
+              <div class="profile">test_txt7</div>
+              <ul class="floating_info_text">
+                <li>text</li>
+                <li>text</li>
+                <li>text</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 위 메뉴 / 번호 및 노션 -->
+      <section class="contact_wrapper">
+        <div class="contact_inner">
+          <div class="detail_view_txt">
+            <a href="#none" class="detail_view_btn">자세히 보기<p><span>.</span><span>.</span><span>!</span></p></a>
+            <ul>
+            </ul>
+          </div>
+          <button class="back_btn" data-back="true">← 뒤로가기</button>
+          <div class="contact_space_container">
+            <div class="contact_center_text">CONTACT</div>
+            <div class="contact_ring" data-text="TEL: 010-8681-6741" data-ring-index="0"></div>
+            <div class="contact_ring" data-text="EMAIL: wlsgur_bloom@naver.com" data-ring-index="1"></div>
+            <div class="contact_ring" data-text="SUB EMAIL: tmdfyd6868@naver.com" data-ring-index="2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 아래 메뉴 / 블로그 /// 컴퓨터 바탕화면처럼 만들기 -->
+      <section class="blog_wrapper">
+        <div class="blog_inner">
+          <button class="back_btn" data-back="true">← 뒤로가기</button>
+          <h2 class="ttl">BLOG</h2>
+          <div class="screen_wrapper">
+            <div class="screen_inner">
+              <ul>
+                <li>
+                  <a href="https://github.com/BaekJinH" target="_blank" rel="noopener noreferrer"
+                    class="icon icon_github">
+                    <span class="icon_text">GITHUB</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://likeable-palladium-d6b.notion.site/115296ec05af800e81e4c435054dd918?source=copy_link"
+                    target="_blank" rel="noopener noreferrer" class="icon icon_notion">
+                    <span class="icon_text">NOTION</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#none">
+                    <span class="icon_text">SKILL NOTE</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div id="popup_wrapper">
+
+            </div>
+            <div id="task_bar">
+              <div class="window_wrapper window_open_btn"></div>
+              <div class="search_wrapper">
+                <input type="text" placeholder="찾기">
+              </div>
+              <ul>
+                <li>
+                  <a href="#none"></a>
+                </li>
+                <li>
+                  <a href="#none"></a>
+                </li>
+                <li>
+                  <a href="#none"></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 페이드 아웃 메뉴 / 재시작 -->
+      <section class="restart_wrapper">
+        <div class="restart_inner">
+          <span data-origin="로" data-alt="로">로</span>
+          <span data-origin="딩" data-alt="딩">딩</span>
+          <span data-origin="중" data-alt="중">중</span>
+          <span data-origin="." data-alt=".">.</span>
+          <span data-origin="." data-alt=".">.</span>
+          <span data-origin="." data-alt=".">.</span>
+          <span data-origin="." data-alt=".">.</span>
+          <span data-origin="." data-alt=".">.</span>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+
+</html>
