@@ -1,0 +1,38 @@
+[
+  {
+    "skill": "HTML",
+    "percentage": 90
+  },
+  {
+    "skill": "CSS",
+    "percentage": 80
+  },
+  {
+    "skill": "Javascript (ES6+)",
+    "percentage": 70
+  },
+  {
+    "skill": "JQuery",
+    "percentage": 80
+  },
+  {
+    "skill": "React",
+    "percentage": 60
+  },
+  {
+    "skill": "PHP",
+    "percentage": 50
+  },
+  {
+    "skill": "Github",
+    "percentage": 60
+  },
+  {
+    "skill": "Figma",
+    "percentage": 50
+  },
+  {
+    "skill": "Photoshop",
+    "percentage": 50
+  }
+]

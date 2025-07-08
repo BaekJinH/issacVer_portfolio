@@ -17,6 +17,8 @@
   let aboutKeyDownHandler = null; // [추가] About 섹션 이벤트 핸들러 참조 저장용
   let portfolioData = []; // 포트폴리오 데이터
   let currentPortfolioItemIndex = 0; // 포트폴리오 목록에서 현재 선택된 아이템 인덱스
+  let currentBlogIconIndex = 0; // 블로그 섹션 아이콘 네비게이션 인덱스
+  let blogKeyDownHandler = null; // 블로그 섹션 이벤트 핸들러 참조 저장용
   let originalTabIndexes = new Map();
 
   // 3. 상수 정의
@@ -138,6 +140,8 @@
           initAboutCarousel(activeSectionWrapper);
         } else if (activatedSectionClass === 'contact') {
           initContactSection(activeSectionWrapper);
+        } else if (activatedSectionClass === 'blog') {
+          initBlogSection(activeSectionWrapper);
         } else if (activatedSectionClass === 'restart') {
           initRestartSection(activeSectionWrapper);
         } else {
@@ -158,12 +162,26 @@
     const isContactActive = mainElement.classList.contains('contact');
     const contactWrapper = mainElement.querySelector('.contact_wrapper');
 
-    if (isContactActive && contactWrapper && contactWrapper._contactExitAnimation) {
-      // contact 섹션 퇴장 애니메이션 실행
-      contactWrapper._contactExitAnimation(() => {
-        // 애니메이션 완료 후 실제 뒤로가기 처리
+    if (isContactActive && contactWrapper) {
+      // 자세히 보기 상태인지 확인
+      const isDetailView = contactWrapper._getDetailViewState && contactWrapper._getDetailViewState();
+
+      if (isDetailView && contactWrapper._contactDetailExitAnimation) {
+        // 자세히 보기 상태에서의 특별한 퇴장 애니메이션 실행
+        contactWrapper._contactDetailExitAnimation(() => {
+          // 애니메이션 완료 후 실제 뒤로가기 처리
+          performGoBack();
+        });
+      } else if (contactWrapper._contactExitAnimation) {
+        // 일반 contact 섹션 퇴장 애니메이션 실행
+        contactWrapper._contactExitAnimation(() => {
+          // 애니메이션 완료 후 실제 뒤로가기 처리
+          performGoBack();
+        });
+      } else {
+        // 애니메이션 함수가 없으면 바로 뒤로가기
         performGoBack();
-      });
+      }
     } else {
       // 다른 섹션들은 바로 뒤로가기 처리
       performGoBack();
@@ -183,11 +201,35 @@
         if (className === 'about') {
           removeAboutCarouselListener(sectionWrapper);
         }
+        // [추가] Blog 섹션 네비게이션 리스너 제거
+        if (className === 'blog') {
+          removeBlogNavigationListener(sectionWrapper);
+        }
         // [추가] Contact 섹션 정리
         if (className === 'contact' && sectionWrapper._contactCleanup) {
           sectionWrapper._contactCleanup();
           delete sectionWrapper._contactCleanup;
           delete sectionWrapper._contactExitAnimation;
+        }
+        // [추가] Blog 섹션 정리
+        if (className === 'blog') {
+          sectionWrapper.classList.remove('glitch-active');
+          // 팝업 닫기
+          const popupWrapper = document.querySelector('#popup_wrapper');
+          if (popupWrapper) {
+            popupWrapper.classList.remove('visible');
+            // 팝업 이벤트 리스너 정리
+            if (popupWrapper._closeListeners) {
+              document.removeEventListener('keydown', popupWrapper._closeListeners.keydown);
+              popupWrapper.removeEventListener('click', popupWrapper._closeListeners.click);
+              delete popupWrapper._closeListeners;
+            }
+          }
+          // 검색 기능 정리
+          if (sectionWrapper._searchCleanup) {
+            sectionWrapper._searchCleanup();
+            delete sectionWrapper._searchCleanup;
+          }
         }
       }
     });
@@ -710,6 +752,29 @@
       }, spanArray.length * 30 + 600);
     };
 
+    // 자세히 보기 상태에서의 퇴장 애니메이션 (글자들이 아래로 떨어짐)
+    const startDetailViewExitAnimation = (callback) => {
+      isAnimating = true;
+      const detailSpans = detailViewList.querySelectorAll('li span');
+      const spanArray = Array.from(detailSpans);
+
+      // 글자들을 아래로 떨어뜨리는 애니메이션
+      spanArray.forEach((span, index) => {
+        setTimeout(() => {
+          const rect = span.getBoundingClientRect();
+          span.style.setProperty('--start-x', `${rect.left}px`);
+          span.style.setProperty('--start-y', `${rect.top}px`);
+
+          span.classList.add('detail-exiting');
+        }, index * 20); // 20ms씩 지연으로 순차적으로 떨어짐
+      });
+
+      // 모든 애니메이션이 끝난 후 콜백 실행
+      setTimeout(() => {
+        if (callback) callback();
+      }, spanArray.length * 20 + 800);
+    };
+
     const startMainAnimation = () => {
       const animate = () => {
         if (isAnimating) {
@@ -871,8 +936,10 @@
       wrapper.removeEventListener('touchmove', handleMouse);
     };
 
-    // 퇴장 애니메이션 함수를 wrapper에 저장
+    // 퇴장 애니메이션 함수들과 상태를 wrapper에 저장
     wrapper._contactExitAnimation = startExitAnimation;
+    wrapper._contactDetailExitAnimation = startDetailViewExitAnimation;
+    wrapper._getDetailViewState = () => isDetailView;
   };
 
   /**
@@ -911,6 +978,712 @@
     requestAnimationFrame(checkTimeAndRedirect);
   };
 
+  /**
+   * 블로그 섹션 초기화 - 화면 전체 글리치 효과
+   * @param {HTMLElement} wrapper - 블로그 섹션 래퍼 요소
+   */
+  const initBlogSection = (wrapper) => {
+    const screenWrapper = wrapper.querySelector('.screen_wrapper');
+    const screenInner = wrapper.querySelector('.screen_inner');
+    if (!screenInner) return;
+
+    // CSS로 정의된 배경색을 정확하게 가져오기
+    const computedStyle = window.getComputedStyle(screenInner);
+    let backgroundColor = computedStyle.backgroundColor;
+
+    // 배경색이 투명하거나 없으면 기본값 설정
+    if (!backgroundColor || backgroundColor === 'rgba(0, 0, 0, 0)' || backgroundColor === 'transparent') {
+      backgroundColor = '#999'; // 블로그 래퍼의 배경색과 동일하게
+    }
+
+    // html2canvas로 .screen_wrapper 요소를 캡처
+    html2canvas(screenWrapper, {
+      backgroundColor: backgroundColor,
+      useCORS: true,
+      allowTaint: true,
+      scale: 1,
+      logging: false,
+      removeContainer: true
+    }).then(canvas => {
+      // 캡처가 완료되면, 생성된 canvas에 글리치 효과를 적용
+      applyGlitchEffect(canvas);
+
+      // 캡처 후 원래대로 숨김
+      wrapper.style.transition = 'transform 0.3s ease-in-out';
+      mainElement.classList.remove('blog');
+      setTimeout(() => mainElement.classList.add('blog'), 20);
+
+      // 블로그 섹션 네비게이션 초기화
+      initBlogNavigation(wrapper);
+
+      // 뒤로가기 버튼에 포커스 설정 (기본 동작)
+      const backBtn = wrapper.querySelector('.back_btn');
+      if (backBtn) {
+        backBtn.focus();
+      }
+
+      // Tab 키로 검색창에 접근할 수 있도록 tabindex 설정
+      const searchInput = wrapper.querySelector('.search_wrapper input');
+      if (searchInput) {
+        searchInput.tabIndex = 0;
+      }
+    }).catch(error => {
+      console.error('html2canvas 에러:', error);
+    });
+  };
+
+  /**
+   * 생성된 캔버스에 글리치 효과를 적용하고 화면에 표시
+   * @param {HTMLCanvasElement} canvas - html2canvas로 생성된 캔버스
+   */
+  const applyGlitchEffect = (canvas) => {
+    // 글리치 효과를 담을 전체 화면 오버레이 생성
+    const glitchOverlay = document.createElement('div');
+    glitchOverlay.className = 'glitch-canvas-overlay';
+
+    // 캔버스의 내용을 배경 이미지로 사용하는 레이어 2개 생성 (글리치 효과용)
+    const glitchLayer1 = document.createElement('div');
+    glitchLayer1.className = 'glitch-layer';
+    glitchLayer1.style.backgroundImage = `url(${canvas.toDataURL()})`;
+
+    const glitchLayer2 = glitchLayer1.cloneNode(true);
+
+    // 오버레이에 레이어들 추가
+    glitchOverlay.appendChild(glitchLayer1);
+    glitchOverlay.appendChild(glitchLayer2);
+
+    // body에 오버레이 추가
+    document.body.appendChild(glitchOverlay);
+
+    // 글리치 애니메이션이 끝나면 오버레이 제거
+    setTimeout(() => {
+      glitchOverlay.remove();
+    }, 800); // 0.8초 후 제거 (CSS 애니메이션 시간과 맞춤)
+  };
+
+  /**
+   * 블로그 섹션 네비게이션 초기화
+   * @param {HTMLElement} wrapper - 블로그 섹션 래퍼 요소
+   */
+  const initBlogNavigation = (wrapper) => {
+    // 네비게이션 가능한 아이콘들 선택 (뒤로가기 버튼 제외)
+    const blogIcons = wrapper.querySelectorAll('.screen_inner ul li a');
+    if (blogIcons.length === 0) return;
+
+    // 초기 인덱스 설정
+    currentBlogIconIndex = 0;
+
+    /**
+     * 블로그 아이콘 선택 상태 업데이트
+     */
+    const updateBlogIconSelection = () => {
+      blogIcons.forEach((icon, index) => {
+        icon.classList.toggle('focused', index === currentBlogIconIndex);
+        if (index === currentBlogIconIndex) {
+          icon.focus();
+        }
+      });
+    };
+
+    /**
+     * 블로그 아이콘 활성화 (Enter/Space 키 또는 클릭 시)
+     * @param {HTMLElement} icon - 활성화할 아이콘 요소
+     */
+    const activateBlogIcon = (icon) => {
+      if (!icon) return;
+
+      // Skill Note 버튼인 경우
+      if (icon.id === 'skill_note_btn') {
+        handleSkillNoteClick({
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        });
+        return;
+      }
+
+      // 외부 링크인 경우 (GitHub, Notion)
+      const href = icon.getAttribute('href');
+      const target = icon.getAttribute('target');
+
+      if (href && href !== '#none') {
+        if (target === '_blank') {
+          // 새 창에서 열기
+          window.open(href, '_blank', 'noopener,noreferrer');
+        } else {
+          // 현재 창에서 열기
+          window.location.href = href;
+        }
+      }
+    };
+
+    /**
+     * Skill Note 버튼 클릭 핸들러
+     * @param {Event} e - 클릭 이벤트
+     */
+    const handleSkillNoteClick = (e) => {
+      const popupWrapper = document.querySelector('#popup_wrapper');
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 스킬 데이터 로드 및 팝업 표시
+      loadSkillData()
+        .then(skillData => {
+          createSkillList(skillData);
+          popupWrapper.classList.add('visible');
+        })
+        .catch(error => {
+          console.error('스킬 데이터 로드 실패:', error);
+          // 에러 발생 시에도 팝업은 보여주되, 에러 메시지 표시
+          createErrorSkillList();
+          popupWrapper.classList.add('visible');
+        });
+    };
+
+    /**
+     * 현재 검색된 아이콘들을 가져오는 함수
+     * @returns {Array} 검색된 아이콘들의 배열
+     */
+    const getVisibleIcons = () => {
+      return Array.from(blogIcons).filter(icon => {
+        const listItem = icon.closest('li');
+        return !listItem.classList.contains('search-hidden');
+      });
+    };
+
+    /**
+     * 블로그 섹션 키보드 이벤트 핸들러
+     * @param {KeyboardEvent} e - 키보드 이벤트
+     */
+    blogKeyDownHandler = (e) => {
+      // 뒤로가기 버튼에 포커스가 있으면 방향키 처리 안함
+      if (document.activeElement === wrapper.querySelector('.back_btn')) {
+        return;
+      }
+
+      // 검색창에 포커스가 있으면 방향키 처리 안함 (검색창 자체 핸들러가 처리)
+      if (document.activeElement === wrapper.querySelector('.search_wrapper input')) {
+        return;
+      }
+
+      // Enter 또는 Space 키로 현재 선택된 아이콘 활성화
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentIcon = blogIcons[currentBlogIconIndex];
+        if (currentIcon) {
+          activateBlogIcon(currentIcon);
+        }
+        return;
+      }
+
+      // 현재 보이는 아이콘들로 네비게이션 제한
+      const visibleIcons = getVisibleIcons();
+      if (visibleIcons.length === 0) return;
+
+      // 현재 선택된 아이콘이 보이는 아이콘들 중 몇 번째인지 찾기
+      const currentVisibleIndex = visibleIcons.findIndex(icon =>
+        Array.from(blogIcons).indexOf(icon) === currentBlogIconIndex
+      );
+
+      // 방향키 네비게이션 (검색된 아이콘들만 대상)
+      const newVisibleIndex = handleListNavigation(
+        e,
+        visibleIcons,
+        currentVisibleIndex >= 0 ? currentVisibleIndex : 0,
+        (newIndex) => {
+          // 실제 아이콘 배열에서의 인덱스 찾기
+          const selectedIcon = visibleIcons[newIndex];
+          currentBlogIconIndex = Array.from(blogIcons).indexOf(selectedIcon);
+          updateBlogIconSelection();
+        },
+        true // 무한 순환
+      );
+    };
+
+    // 각 아이콘에 이벤트 추가
+    blogIcons.forEach((icon, index) => {
+      // 포커스 시 현재 인덱스 업데이트
+      icon.addEventListener('focus', () => {
+        currentBlogIconIndex = index;
+        updateBlogIconSelection();
+      });
+
+      // 클릭 이벤트 - 외부 링크는 기본 동작 허용, Skill Note만 커스텀 처리
+      if (icon.id === 'skill_note_btn' || icon.classList.contains('skill_note_btn')) {
+        icon.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          currentBlogIconIndex = index;
+          updateBlogIconSelection();
+          activateBlogIcon(icon);
+        });
+      } else {
+        // GitHub, Notion 링크는 기본 클릭 동작 유지하되 인덱스는 업데이트
+        icon.addEventListener('click', () => {
+          currentBlogIconIndex = index;
+          updateBlogIconSelection();
+        });
+      }
+    });
+
+    // 키보드 이벤트 리스너 등록
+    wrapper.addEventListener('keydown', blogKeyDownHandler);
+
+    // 팝업 닫기 기능 초기화
+    initPopupCloseFeature();
+
+    // 검색 기능 초기화
+    initBlogSearchFeature(wrapper, blogIcons);
+
+    // 초기 선택 상태 설정
+    updateBlogIconSelection();
+  };
+
+  /**
+   * 블로그 섹션 네비게이션 리스너 제거
+   * @param {HTMLElement} wrapper - 블로그 섹션 래퍼 요소
+   */
+  const removeBlogNavigationListener = (wrapper) => {
+    if (wrapper && blogKeyDownHandler) {
+      wrapper.removeEventListener('keydown', blogKeyDownHandler);
+      blogKeyDownHandler = null;
+    }
+  };
+
+  /**
+   * 스킬 데이터를 JSON 파일에서 로드
+   * @returns {Promise<Array>} 스킬 데이터 배열
+   */
+  const loadSkillData = async () => {
+    try {
+      const response = await fetch('./src/skillList.json');
+      if (!response.ok) {
+        throw new Error('스킬 데이터를 불러올 수 없습니다.');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('스킬 데이터 로드 실패:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * 스킬 리스트 UI 생성
+   * @param {Array} skillData - 스킬 데이터 배열
+   */
+  const createSkillList = (skillData) => {
+    const skillListContainer = document.querySelector('#popup_wrapper .skill_list');
+    if (!skillListContainer) return;
+
+    // 기존 리스트 초기화
+    skillListContainer.innerHTML = '';
+
+    skillData.forEach((skill, index) => {
+      // li 요소 생성
+      const listItem = document.createElement('li');
+      listItem.className = 'skill_item';
+      listItem.style.animationDelay = `${index * 0.1}s`; // 순차적 애니메이션
+
+      // 스킬 이름
+      const skillName = document.createElement('span');
+      skillName.className = 'skill_name';
+      skillName.textContent = skill.skill;
+
+      // 퍼센티지 바 컨테이너
+      const percentageContainer = document.createElement('div');
+      percentageContainer.className = 'percentage_container';
+
+      // 퍼센티지 바 배경
+      const percentageBar = document.createElement('div');
+      percentageBar.className = 'percentage_bar';
+
+      // 퍼센티지 바 채우기
+      const percentageFill = document.createElement('div');
+      percentageFill.className = 'percentage_fill';
+      percentageFill.style.width = '0%'; // 초기값
+      percentageFill.setAttribute('data-percentage', skill.percentage);
+
+      // 퍼센티지 텍스트
+      const percentageText = document.createElement('span');
+      percentageText.className = 'percentage_text';
+      percentageText.textContent = `${skill.percentage}%`;
+
+      // 요소들 조립
+      percentageBar.appendChild(percentageFill);
+      percentageContainer.appendChild(percentageBar);
+      percentageContainer.appendChild(percentageText);
+
+      listItem.appendChild(skillName);
+      listItem.appendChild(percentageContainer);
+      skillListContainer.appendChild(listItem);
+    });
+
+    // 애니메이션 트리거 (약간의 지연 후)
+    setTimeout(() => {
+      animateSkillBars();
+    }, 300);
+  };
+
+  /**
+   * 스킬 바 애니메이션 실행
+   */
+  const animateSkillBars = () => {
+    const skillFills = document.querySelectorAll('.percentage_fill');
+
+    skillFills.forEach((fill, index) => {
+      const targetPercentage = fill.getAttribute('data-percentage');
+
+      setTimeout(() => {
+        fill.style.transition = 'width 1.5s ease-out';
+        fill.style.width = `${targetPercentage}%`;
+      }, index * 200); // 순차적 애니메이션
+    });
+  };
+
+  /**
+   * 에러 발생 시 기본 스킬 리스트 생성
+   */
+  const createErrorSkillList = () => {
+    const errorSkills = [{
+        skill: "데이터 로드 실패",
+        percentage: 0
+      },
+      {
+        skill: "다시 시도해주세요",
+        percentage: 0
+      }
+    ];
+    createSkillList(errorSkills);
+  };
+
+  /**
+   * 블로그 검색 기능 초기화
+   * @param {HTMLElement} wrapper - 블로그 섹션 래퍼 요소
+   * @param {NodeList} blogIcons - 검색 대상 아이콘들
+   */
+  const initBlogSearchFeature = (wrapper, blogIcons) => {
+    const searchInput = wrapper.querySelector('.search_wrapper input');
+    const focusInfoTxt = wrapper.querySelector('.search_wrapper .focus_info_txt');
+    if (!searchInput) return;
+
+    // 검색 가능한 아이콘 데이터 생성
+    const searchableIcons = Array.from(blogIcons).map((icon, index) => {
+      const iconText = icon.querySelector('.icon_text');
+      const text = iconText ? iconText.textContent.toLowerCase() : '';
+      const keywords = [text];
+
+      // 각 아이콘별 추가 키워드 설정
+      if (icon.classList.contains('icon_github')) {
+        keywords.push('github', 'git', '깃허브', '깃', 'repository', 'repo', 'code', '코드');
+      } else if (icon.classList.contains('icon_notion')) {
+        keywords.push('notion', '노션', 'note', '노트', 'wiki', '위키', 'docs', '문서');
+      } else if (icon.id === 'skill_note_btn') {
+        keywords.push('skill', 'note', '스킬', '노트', 'tech', '기술', 'ability', '능력');
+      }
+
+      return {
+        element: icon,
+        listItem: icon.closest('li'),
+        index,
+        keywords,
+        originalText: iconText ? iconText.textContent : ''
+      };
+    });
+
+    let filteredIcons = [...searchableIcons];
+
+    /**
+     * 검색 결과에 따라 아이콘들 필터링
+     * @param {string} searchTerm - 검색어
+     */
+    const filterIcons = (searchTerm) => {
+      const trimmedTerm = searchTerm.trim().toLowerCase();
+
+      if (!trimmedTerm) {
+        // 검색어가 없으면 모든 아이콘 표시
+        filteredIcons = [...searchableIcons];
+        searchableIcons.forEach(iconData => {
+          iconData.listItem.classList.remove('search-hidden', 'search-highlighted', 'search-dimmed');
+        });
+      } else {
+        // 검색어와 매칭되는 아이콘들 찾기
+        filteredIcons = searchableIcons.filter(iconData => {
+          const isMatch = iconData.keywords.some(keyword =>
+            keyword.includes(trimmedTerm)
+          );
+
+          if (isMatch) {
+            iconData.listItem.classList.remove('search-hidden', 'search-dimmed');
+            iconData.listItem.classList.add('search-highlighted');
+          } else {
+            iconData.listItem.classList.add('search-hidden');
+            iconData.listItem.classList.remove('search-highlighted', 'search-dimmed');
+          }
+
+          return isMatch;
+        });
+
+        // 검색 결과가 있을 때 매칭되지 않은 아이콘들을 흐리게 처리
+        if (filteredIcons.length > 0 && filteredIcons.length < searchableIcons.length) {
+          searchableIcons.forEach(iconData => {
+            if (!iconData.listItem.classList.contains('search-highlighted') &&
+              !iconData.listItem.classList.contains('search-hidden')) {
+              iconData.listItem.classList.add('search-dimmed');
+            }
+          });
+        }
+      }
+
+      // 현재 선택된 아이콘이 필터링된 결과에 없으면 첫 번째로 이동 (포커스는 이동 안함)
+      const currentIconVisible = filteredIcons.some(iconData =>
+        iconData.index === currentBlogIconIndex
+      );
+
+      if (!currentIconVisible && filteredIcons.length > 0) {
+        currentBlogIconIndex = filteredIcons[0].index;
+        // 아이콘 선택 상태만 업데이트 (포커스는 검색창에 유지)
+        blogIcons.forEach((icon, index) => {
+          icon.classList.toggle('focused', index === currentBlogIconIndex);
+        });
+      }
+
+      // 검색 결과가 정확히 하나일 때 자동 포커스 이동
+      // if (filteredIcons.length === 1 && trimmedTerm) {
+      //   setTimeout(() => {
+      //     // 검색창이 여전히 포커스를 가지고 있을 때만 이동
+      //     if (document.activeElement === searchInput) {
+      //       filteredIcons[0].element.focus();
+      //     }
+      //   }, 300); // 약간의 딜레이로 사용자가 더 타이핑할 수 있는 시간 제공
+      // }
+      // 검색 결과가 없을 때 처리
+      displaySearchResults(filteredIcons.length, trimmedTerm);
+    };
+
+    /**
+     * 검색 결과 표시
+     * @param {number} resultCount - 검색 결과 수
+     * @param {string} searchTerm - 검색어
+     */
+    const displaySearchResults = (resultCount, searchTerm) => {
+      // 기존 검색 결과 메시지 제거
+      const existingMessage = wrapper.querySelector('.search-result-message');
+      if (existingMessage) {
+        existingMessage.remove(); // 즉시 제거
+      }
+
+      if (searchTerm && resultCount === 0) {
+        // 검색 결과가 없을 때 메시지 표시
+        const noResultMessage = document.createElement('div');
+        noResultMessage.className = 'search-result-message';
+
+        // 에러 메시지들의 배열
+        const errorMessages = [{
+          main: "검색 결과가 없습니다.",
+          sub: `"${searchTerm}"와 일치하는 항목을 찾을 수 없습니다.`
+        }];
+
+        // 랜덤하게 메시지 선택
+        const randomMessage = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+
+        // 처음부터 빈 텍스트로 HTML 생성
+        noResultMessage.innerHTML = `
+          <p></p>
+          <small></small>
+        `;
+
+        const screenInner = wrapper.querySelector('.screen_inner');
+        screenInner.appendChild(noResultMessage);
+
+        // 타이핑 효과 추가
+        const mainText = noResultMessage.querySelector('p');
+        const subText = noResultMessage.querySelector('small');
+
+        // 초기 상태: 텍스트는 비어있고 투명
+        mainText.style.opacity = '0';
+        subText.style.opacity = '0';
+
+        // 타이핑 효과 시뮬레이션
+        setTimeout(() => {
+          mainText.style.opacity = '1';
+          typewriterEffect(mainText, randomMessage.main, 20);
+        }, 200);
+
+        setTimeout(() => {
+          subText.style.opacity = '1';
+          typewriterEffect(subText, randomMessage.sub, 30);
+        }, 500);
+
+        // 3초 후 자동으로 메시지 제거
+        setTimeout(() => {
+          if (noResultMessage.parentNode) {
+            noResultMessage.style.animation = 'searchErrorGlitch 0.3s ease-out reverse';
+            setTimeout(() => noResultMessage.remove(), 300);
+          }
+        }, 3000);
+      }
+    };
+
+    /**
+     * 타이핑 효과 함수
+     * @param {HTMLElement} element - 텍스트를 표시할 요소
+     * @param {string} text - 표시할 텍스트
+     * @param {number} speed - 타이핑 속도 (ms)
+     */
+    const typewriterEffect = (element, text, speed) => {
+      element.textContent = '';
+      let i = 0;
+      const timer = setInterval(() => {
+        element.textContent += text.charAt(i);
+        i++;
+        if (i >= text.length) {
+          clearInterval(timer);
+        }
+      }, speed);
+    };
+
+    /**
+     * 검색 입력 이벤트 핸들러
+     * @param {Event} e - 입력 이벤트
+     */
+    const handleSearchInput = (e) => {
+      const searchTerm = e.target.value;
+      filterIcons(searchTerm);
+    };
+
+    /**
+     * 검색창에서의 키보드 이벤트 핸들러
+     * @param {KeyboardEvent} e - 키보드 이벤트
+     */
+    const handleSearchKeydown = (e) => {
+      // 검색창에서 방향키 사용 시 아이콘 네비게이션으로 전환
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+
+        if (filteredIcons.length > 0) {
+          // 첫 번째 검색 결과로 포커스 이동
+          const firstVisibleIcon = filteredIcons[0];
+          currentBlogIconIndex = firstVisibleIcon.index;
+          // 아이콘 선택 상태 업데이트 및 포커스 이동
+          blogIcons.forEach((icon, index) => {
+            icon.classList.toggle('focused', index === currentBlogIconIndex);
+          });
+          firstVisibleIcon.element.focus();
+        }
+      }
+
+      // Enter 키로 첫 번째 검색 결과 실행
+      if (e.key === 'Enter' && filteredIcons.length > 0) {
+        e.preventDefault();
+        const firstVisibleIcon = filteredIcons[0];
+        activateBlogIcon(firstVisibleIcon.element);
+      }
+    };
+
+    // 이벤트 리스너 등록
+    searchInput.addEventListener('input', handleSearchInput);
+    searchInput.addEventListener('keydown', handleSearchKeydown);
+
+    // 검색창 포커스 시 초기화 및 정보 텍스트 표시
+    searchInput.addEventListener('focus', () => {
+      searchInput.select(); // 전체 텍스트 선택
+      if (focusInfoTxt) {
+        focusInfoTxt.classList.add('visible');
+      }
+    });
+
+    // 검색창 블러 시 정보 텍스트 숨기기
+    searchInput.addEventListener('blur', () => {
+      if (focusInfoTxt) {
+        focusInfoTxt.classList.remove('visible');
+      }
+    });
+
+    // 정리 함수 저장 (뒤로가기 시 이벤트 리스너 제거용)
+    wrapper._searchCleanup = () => {
+      searchInput.removeEventListener('input', handleSearchInput);
+      searchInput.removeEventListener('keydown', handleSearchKeydown);
+
+      // 포커스 정보 텍스트 숨기기 및 이벤트 제거
+      if (focusInfoTxt) {
+        focusInfoTxt.classList.remove('visible');
+      }
+
+      // 검색 필터 초기화
+      searchableIcons.forEach(iconData => {
+        iconData.listItem.classList.remove('search-hidden', 'search-highlighted', 'search-dimmed');
+      });
+
+      // 검색 결과 메시지 제거
+      const existingMessage = wrapper.querySelector('.search-result-message');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+    };
+  };
+
+  /**
+   * 팝업 닫기 기능 초기화
+   */
+  const initPopupCloseFeature = () => {
+    const popupWrapper = document.querySelector('#popup_wrapper');
+    const closeBtn = popupWrapper.querySelector('#popup_wrapper #close_btn');
+    if (!popupWrapper) return;
+
+    /**
+     * 팝업 닫기 함수
+     */
+    const closePopup = () => {
+      popupWrapper.classList.remove('visible');
+    };
+
+    /**
+     * ESC 키로 팝업 닫기, Tab 키로 close 버튼 포커스
+     */
+    const handlePopupKeydown = (e) => {
+      if (!popupWrapper.classList.contains('visible')) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closePopup();
+      } else if (e.key === 'Tab') {
+        // Tab 키를 누르면 무조건 close 버튼으로 포커스 이동
+        e.preventDefault();
+        e.stopPropagation();
+        closeBtn.focus();
+      }
+    };
+
+    closeBtn.addEventListener('click', closePopup);
+    closeBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        closePopup();
+      }
+    });
+
+    /**
+     * 팝업 외부 클릭 시 닫기
+     */
+    const handlePopupClick = (e) => {
+      if (e.target === popupWrapper && popupWrapper.classList.contains('visible')) {
+        closePopup();
+      }
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener('keydown', handlePopupKeydown);
+    popupWrapper.addEventListener('click', handlePopupClick);
+
+    // 정리 함수 저장 (뒤로가기 시 이벤트 리스너 제거용)
+    popupWrapper._closeListeners = {
+      keydown: handlePopupKeydown,
+      click: handlePopupClick
+    };
+  };
 
   // 12. 포트폴리오 데이터 불러오기 및 렌더링
   async function importPortfolio() {

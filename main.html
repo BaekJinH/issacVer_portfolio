@@ -7,6 +7,7 @@
   <title>Baek's Result</title>
   <link rel="stylesheet" href="./src/style.css">
   <link rel="stylesheet" href="./src/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./src/main.js" defer></script>
 </head>
 
@@ -38,6 +39,8 @@
           <span>→</span>
           <span>↑</span>
           <span>↓</span>
+          <span>TAB</span>
+          <br>
           <span>ENTER</span>
           <br />
           <span>방향키, 키보드로<br>조작이 가능해요!</span>
@@ -56,7 +59,9 @@
               </ul>
             </div>
             <div class="content_thumbnail">
-              <a href="#none" target="_blank"></a>
+              <a href="#none" target="_blank">
+                <img src="" alt="">
+              </a>
             </div>
           </div>
           <span class="desc">게시된 작업물 외에도 다수의 유지보수 및 개편 작업 진행</span>
@@ -70,7 +75,9 @@
           <h2><span>Who</span> <span>Am</span> <span>I?</span></h2>
           <div class="about_content_slide_wrapper">
             <div class="about_content">
-              <div class="profile">test_txt1</div>
+              <div class="profile profile_1">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -78,7 +85,9 @@
               </ul>
             </div>
             <div class="about_content">
-              <div class="profile">test_txt2</div>
+              <div class="profile profile_2">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -86,7 +95,9 @@
               </ul>
             </div>
             <div class="about_content">
-              <div class="profile">test_txt3 (초기 중앙)</div>
+              <div class="profile profile_3">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -94,7 +105,9 @@
               </ul>
             </div>
             <div class="about_content">
-              <div class="profile">test_txt4</div>
+              <div class="profile profile_4">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -102,7 +115,9 @@
               </ul>
             </div>
             <div class="about_content">
-              <div class="profile">test_txt5</div>
+              <div class="profile profile_5">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -110,7 +125,9 @@
               </ul>
             </div>
             <div class="about_content">
-              <div class="profile">test_txt6</div>
+              <div class="profile profile_6">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -118,7 +135,9 @@
               </ul>
             </div>
             <div class="about_content">
-              <div class="profile">test_txt7</div>
+              <div class="profile profile_7">
+                <img src="" alt="">
+              </div>
               <ul class="floating_info_text">
                 <li>text</li>
                 <li>text</li>
@@ -133,9 +152,11 @@
       <section class="contact_wrapper">
         <div class="contact_inner">
           <div class="detail_view_txt">
-            <a href="#none" class="detail_view_btn">자세히 보기<p><span>.</span><span>.</span><span>!</span></p></a>
-            <ul>
-            </ul>
+            <div class="detail_view_btn_wrapper">
+              <ul>
+              </ul>
+              <a href="#none" class="detail_view_btn">자세히 보기<p><span>.</span><span>.</span><span>!</span></p></a>
+            </div>
           </div>
           <button class="back_btn" data-back="true">← 뒤로가기</button>
           <div class="contact_space_container">
@@ -153,44 +174,94 @@
           <button class="back_btn" data-back="true">← 뒤로가기</button>
           <h2 class="ttl">BLOG</h2>
           <div class="screen_wrapper">
+            <div class="border-wrapper">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <div>
+                <p>
+                  <span></span>
+                  <span></span>
+                </p>
+              </div>
+              <div>
+                <p>
+                  <span></span>
+                  <span></span>
+                </p>
+              </div>
+              <div>
+                <p>
+                  <span></span>
+                  <span></span>
+                </p>
+              </div>
+              <div>
+                <p>
+                  <span></span>
+                  <span></span>
+                </p>
+              </div>
+            </div>
             <div class="screen_inner">
               <ul>
                 <li>
                   <a href="https://github.com/BaekJinH" target="_blank" rel="noopener noreferrer"
                     class="icon icon_github">
+                    <img src="./src/image/github_pixelated.png" alt="">
                     <span class="icon_text">GITHUB</span>
                   </a>
                 </li>
                 <li>
                   <a href="https://likeable-palladium-d6b.notion.site/115296ec05af800e81e4c435054dd918?source=copy_link"
                     target="_blank" rel="noopener noreferrer" class="icon icon_notion">
+                    <img src="./src/image/notion_pixelated.png" alt="">
                     <span class="icon_text">NOTION</span>
                   </a>
                 </li>
                 <li>
-                  <a href="#none">
+                  <a href="#none" id="skill_note_btn">
+                    <img src="./src/image/note_pixelated_grayscale.png" alt="">
                     <span class="icon_text">SKILL NOTE</span>
                   </a>
                 </li>
               </ul>
             </div>
             <div id="popup_wrapper">
-
+              <button id="close_btn" title="닫기">
+                <span></span>
+                <span></span>
+              </button>
+              <div class="popup_inner">
+                <ul class="skill_list">
+                </ul>
+              </div>
             </div>
             <div id="task_bar">
               <div class="window_wrapper window_open_btn"></div>
               <div class="search_wrapper">
+                <div class="focus_info_txt">
+                  <span>입력해주세요!</span>
+                </div>
                 <input type="text" placeholder="찾기">
               </div>
-              <ul>
+              <ul class="sub_blog_icons">
                 <li>
-                  <a href="#none"></a>
+                  <a href="https://github.com/BaekJinH" target="_blank" rel="noopener noreferrer">
+                    <img src="./src/image/github_pixelated.png" alt="">
+                  </a>
                 </li>
                 <li>
-                  <a href="#none"></a>
+                  <a href="https://likeable-palladium-d6b.notion.site/115296ec05af800e81e4c435054dd918?source=copy_link"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="./src/image/notion_pixelated.png" alt="">
+                  </a>
                 </li>
                 <li>
-                  <a href="#none"></a>
+                  <a href="#none" class="skill_note_btn">
+                    <img src="./src/image/note_pixelated_grayscale.png" alt="">
+                  </a>
                 </li>
               </ul>
             </div>
