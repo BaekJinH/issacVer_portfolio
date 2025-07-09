@@ -102,14 +102,15 @@ main.restart {}
   gap: 2.85rem;
   width: 100%;
   height: 100%;
-  align-items: center;
+  align-items: flex-start;
   /* justify-content: center; */
-  padding-top: 11.5rem;
   position: absolute;
   z-index: 999;
   left: 0;
   top: 0;
   background: url(./image/main_menu_bg_resized_1920.png) no-repeat center center / cover;
+  padding-top: 11.5rem;
+  padding-left: 42rem;
 }
 
 .select_options_wrapper .select_option {
@@ -117,6 +118,22 @@ main.restart {}
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+.select_options_wrapper .select_option:nth-child(2) {
+  margin-left: 1rem;
+}
+
+.select_options_wrapper .select_option:nth-child(3) {
+  margin-left: 2rem;
+}
+
+.select_options_wrapper .select_option:nth-child(4) {
+  margin-left: 3rem;
+}
+
+.select_options_wrapper .select_option:nth-child(5) {
+  margin-left: 4rem;
 }
 
 .select_options_wrapper .select_option button {
@@ -129,7 +146,8 @@ main.restart {}
   background-color: transparent;
   transform-origin: center;
   transform: rotate(356deg);
-  margin-top: -2rem
+  margin-top: -2rem;
+  color: #43383A;
 }
 
 .select_options_wrapper .select_option button:before {
@@ -180,13 +198,15 @@ main section {
   width: 100%;
   height: 100%;
   z-index: 100;
+  background: #CAC0BA;
   transition: transform 0.3s ease-in-out;
+  box-shadow: inset 0 0 10rem 0 rgba(0, 0, 0, .25);
   z-index: 1
 }
 
 /* 포트폴리오 */
 .portfolio_wrapper {
-  background-color: #000;
+  background: url(./image/portfolio_section_bg.png) no-repeat center center / cover #CAC0BA;
   color: white;
   display: flex;
   align-items: center;
@@ -240,11 +260,224 @@ main section {
   width: 25rem;
   height: auto;
   aspect-ratio: 4.5 / 3;
+  position: relative;
+  perspective: 1000px;
+  /* 입체적인 느낌을 위해 원근감 추가 */
+}
+
+.portfolio_wrapper .content_thumbnail .contribution {
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.portfolio_wrapper .content_thumbnail .contribution_bar {
+  width: 100%;
+  height: 1.2rem;
+  background-color: #fff;
+  border-radius: 2rem;
+}
+
+.portfolio_wrapper .content_thumbnail .contribution_bar_fill {
+  width: 0%;
+  height: 100%;
+  background-color: #ffff00;
+  border-radius: 2rem;
+  will-change: width;
+  transition: width 0.2s ease-out;
+}
+
+/* 사용 스킬 리스트 스타일 */
+.portfolio_wrapper .use_skill_wrapper {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.portfolio_wrapper .use_skill_list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: skillItemSlideIn 0.5s ease-out forwards;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item .skill-name {
+  font-weight: 600;
+  color: #43383A;
+  font-size: 0.9rem;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item .skill-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  margin-left: 1rem;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item .skill-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item .skill-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #ffff00, #ff6b6b);
+  border-radius: 4px;
+  transition: width 0s;
+  /* 초기에는 애니메이션 없음 */
+  position: relative;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item .skill-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  animation: skillShine 2s ease-in-out infinite;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item .skill-percentage {
+  font-size: 0.8rem;
+  color: #ffff00;
+  font-weight: 600;
+  min-width: 35px;
+  text-align: right;
+}
+
+.portfolio_wrapper .use_skill_list .no-skills {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.portfolio_wrapper .use_skill_list .skill-item.error .skill-name {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes skillItemSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skillShine {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 동적으로 생성될 각 카드(p-card)의 기본 스타일 */
+.portfolio_wrapper .content_thumbnail .p-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  transform-origin: center center;
+  transition: transform 0.6s cubic-bezier(.8, .2, .1, 0.8),
+    opacity 0.6s cubic-bezier(.8, .2, .1, 0.8);
+  -webkit-user-select: none;
+  user-select: none;
+  z-index: 2;
+  opacity: 0;
+  background-color: #fff !important;
+}
+
+/* 현재 선택된 카드 바로 뒤에 있을 카드 */
+.portfolio_wrapper .content_thumbnail .p-card.card--next {
+  z-index: 5;
+  opacity: 1;
+  transform: translateY(-25px) translateX(15px) rotate(4deg) scale(0.95);
+}
+
+/* 화면 밖으로 나가는 카드 (이전 카드) */
+.portfolio_wrapper .content_thumbnail .p-card.card--out {
+  /* JS가 클래스를 추가하는 순간 애니메이션이 시작됩니다. */
+  animation: card-out 0.7s cubic-bezier(.8, .2, .1, 0.8);
+  z-index: 1;
+  opacity: 0;
+  /* 애니메이션이 끝나면 투명하게 */
+}
+
+/* card-out 애니메이션 키프레임 */
+@keyframes card-out {
+  0% {
+    z-index: 20;
+    /* 다른 카드 위로 올라와서 퇴장 */
+    opacity: 1;
+    transform: translateY(0px) rotate(-4deg) scale(1);
+  }
+
+  50% {
+    /* 옆으로 멀리 날아가는 효과 */
+    transform: translateY(-100%) rotate(-15deg) translateX(-80px) scale(0.8);
+  }
+
+  100% {
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(-50px) rotate(8deg) translateX(55px) scale(0.9);
+  }
+}
+
+/* 현재 선택된 카드 */
+.portfolio_wrapper .content_thumbnail .p-card.card--current {
+  cursor: auto;
+  -webkit-user-select: auto;
+  user-select: auto;
+  position: relative;
+  z-index: 10;
+  opacity: 1;
+  transform: rotate(-1deg) translateX(0%) scale(1);
 }
 
 /* 자소서 */
 .about_wrapper {
-  background-color: #333;
+  background: url(./image/about_section_bg.png) no-repeat center center / contain #CAC0BA;
   color: white;
   display: flex;
   align-items: center;
@@ -252,21 +485,8 @@ main section {
   transform: translateX(100%);
 }
 
-.about-wrapper h2 {
-  position: relative;
-  display: inline-flex;
-  gap: 0.5rem;
-}
-
-.about-wrapper h2 span {
-  display: inline-block;
-  transform-origin: center;
-  font-size: 5rem;
-  letter-spacing: 0.12rem;
-}
-
 .about-wrapper h2 span:nth-child(1) {
-  transform: rotate(356deg);
+  transform: rotate(-350deg);
 }
 
 .about-wrapper h2 span:nth-child(2) {
@@ -286,7 +506,39 @@ main section {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 5rem;
+}
+
+.about_inner>h2 {
+  position: absolute;
+  top: 12rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 700;
+  letter-spacing: 0.12rem;
+  color: #43383A;
+}
+
+.about_inner>h2 span {
+  display: inline-block;
+  position: relative;
+  transform-origin: center;
+}
+
+.about_inner>h2 span:nth-child(1) {
+  font-size: 5.825rem;
+  transform: rotate(-8deg);
+}
+
+.about_inner>h2 span:nth-child(2) {
+  margin-left: 4.125rem;
+  font-size: 6.125rem;
+  transform: rotate(1deg);
+}
+
+.about_inner>h2 span:nth-child(3) {
+  margin-left: 4.45rem;
+  font-size: 5.95rem;
+  transform: rotate(5deg);
 }
 
 .about_content_slide_wrapper {
@@ -295,28 +547,40 @@ main section {
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 40rem;
+  height: 100%;
   perspective: 1000px;
   overflow: hidden;
 }
 
 .about_content {
   position: absolute;
-  width: 20rem;
-  height: 12rem;
+  width: 12rem;
+  height: 10rem;
   /* 슬라이드 너비 조절 */
   opacity: 0;
   transform: scale(0.7);
   transition: transform 0.5s ease, opacity 0.5s ease;
   pointer-events: none;
   /* 보이지 않을 때 클릭 방지 */
-  border: 2px solid #ddd;
+  /* border: 2px solid #ddd; */
   /* 예시 스타일 */
   padding: 20px;
-  background: rgba(0, 0, 0, 0.5);
+  /* background: rgba(0, 0, 0, 0.5); */
   border-radius: 10px;
   outline: none;
   /* 포커스 시 기본 아웃라인 제거 */
+}
+
+.about_content .profile {
+  width: 100%;
+  height: 100%;
+}
+
+.about_content .profile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
 }
 
 .about_content .floating_info_text {
@@ -330,6 +594,10 @@ main section {
   left: 0;
   width: 100%;
   opacity: 0;
+  color: #43383A;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.12rem;
 }
 
 /* 포커스 시 커스텀 아웃라인 */
@@ -380,7 +648,6 @@ main section {
 
 /* 컨택 */
 .contact_wrapper {
-  background-color: #666;
   color: white;
   display: flex;
   align-items: center;
@@ -429,7 +696,7 @@ main section {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
+  color: #43383A;
   text-align: center;
 }
 
@@ -459,7 +726,7 @@ main section {
   position: fixed;
   /* 화면 전체를 기준으로 위치 잡기 위함 */
   pointer-events: none;
-  color: #fff;
+  color: #43383A;
   font-weight: 700;
   will-change: transform;
   /* 애니메이션 성능 최적화 */
@@ -481,7 +748,7 @@ main section {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  color: #fff;
+  color: #43383A;
   font-weight: 700;
   font-size: 3rem;
   width: 100%;
@@ -522,7 +789,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   z-index: 100;
   font-size: 3rem;
   font-weight: 700;
-  color: #fff;
+  color: #43383A;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
   pointer-events: none;
   -webkit-user-select: none;
@@ -548,7 +815,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   position: absolute;
   top: 50%;
   left: 50%;
-  color: #fff;
+  color: #43383A;
   font-weight: 700;
   transform-origin: center;
   white-space: nowrap;
@@ -598,7 +865,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   z-index: 200;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
+  color: #43383A;
   padding: 0.8rem 1.5rem;
   border-radius: 25px;
   font-size: 1rem;
@@ -647,7 +914,6 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
 
 /* 블로그 */
 .blog_wrapper {
-  background-color: #999;
   color: white;
   display: flex;
   align-items: center;
@@ -673,7 +939,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   z-index: 1;
   font-size: 3rem;
   font-weight: 700;
-  color: #fff;
+  color: #43383A;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   letter-spacing: 0.2em;
 }
@@ -931,7 +1197,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
 #task_bar .search_wrapper {
   width: 20rem;
   height: 100%;
-  background-color: #fff;
+  background-color: #43383A;
 }
 
 #task_bar .search_wrapper input {
@@ -1140,7 +1406,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #fff;
+  color: #43383A;
   background: rgba(20, 20, 20, 0.95);
   padding: 2rem;
   border-radius: 0;
@@ -1435,7 +1701,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   top: -3rem;
   left: 50%;
   background: #000;
-  color: #fff;
+  color: #43383A;
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -1549,7 +1815,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
 
 .skill_name {
   display: block;
-  color: #fff;
+  color: #43383A;
   font-size: 0.9rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -1590,7 +1856,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
 }
 
 .percentage_text {
-  color: #fff;
+  color: #43383A;
   font-size: 0.8rem;
   font-weight: bold;
   min-width: 35px;

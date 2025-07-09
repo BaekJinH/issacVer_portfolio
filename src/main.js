@@ -414,43 +414,43 @@
         z: 5
       }, // active (중앙)
       '1': {
-        x: '20rem',
-        y: '-1rem',
+        x: '12.5rem',
+        y: '-0.5rem',
         scale: 0.8,
         opacity: 0.7,
         z: 4
       }, // next (오른쪽 1)
       '-1': {
-        x: '-20rem',
-        y: '-1rem',
+        x: '-12.5rem',
+        y: '-0.5rem',
         scale: 0.8,
         opacity: 0.7,
         z: 4
       }, // prev (왼쪽 1)
       '2': {
-        x: '35rem',
+        x: '19rem',
         y: '-6rem',
         scale: 0.6,
         opacity: 0.4,
         z: 3
       }, // 오른쪽 2
       '-2': {
-        x: '-35rem',
+        x: '-19rem',
         y: '-6rem',
         scale: 0.6,
         opacity: 0.4,
         z: 3
       }, // 왼쪽 2
       '3': {
-        x: '30rem',
+        x: '15rem',
         y: '-12rem',
         scale: 0.4,
         opacity: 0.2,
         z: 2
       }, // 오른쪽 3
       '-3': {
-        x: '-30rem',
-        y: '-12rem',
+        x: '-15rem',
+        y: '-11rem',
         scale: 0.4,
         opacity: 0.2,
         z: 2
@@ -947,10 +947,11 @@
    * @param {HTMLElement} wrapper - 포트폴리오 섹션 래퍼 요소
    */
   const initPortfolioSection = (wrapper) => {
+    // 이 함수는 이제 첫 포커스만 담당합니다.
+    // 실제 데이터 렌더링은 importPortfolio가 완료된 후 fetchPortfolio에서 처리됩니다.
     const firstPortfolioItem = portfolioContentList ? portfolioContentList.querySelector('li') : null;
     if (firstPortfolioItem) {
       firstPortfolioItem.focus();
-      updatePortfolioSelection();
     } else {
       const focusableElements = wrapper.querySelectorAll('a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
       if (focusableElements.length > 0) focusableElements[0].focus();
@@ -1714,52 +1715,82 @@
       return;
     }
 
-    const portfolioItems = portfolioData[0]; // portfolioData는 이중 배열이므로 첫 번째 배열을 가져옴
+    const portfolioItems = portfolioData[0];
+    const thumbnailContainer = mainElement.querySelector('.content_thumbnail');
 
-    // 기존 li 요소들 제거
-    portfolioContentList.innerHTML = '';
+    // 기존 요소들 초기화
+    thumbnailContainer.querySelectorAll('.p-card').forEach(card => card.remove());
+    portfolioContentList.innerHTML = ''; // 썸네일 컨테이너도 비움
 
+    // 1. 컨트롤러(li)와 카드(div) DOM 생성
     portfolioItems.forEach((item, index) => {
+      // 리스트 아이템 생성
       const li = document.createElement('li');
       li.textContent = item.title;
-      li.setAttribute('data-img', item.img);
-      li.setAttribute('data-link', item.link);
-      li.setAttribute('data-index', index);
-      li.tabIndex = 0; // li 요소도 포커스 가능하도록 tabIndex 설정
-
-      // 클릭/터치 이벤트: 선택된 아이템 업데이트
-      li.addEventListener('pointerdown', () => {
-        currentPortfolioItemIndex = index;
-        updatePortfolioSelection();
-      });
-
-      // 키보드 이벤트: 범용 핸들러를 사용하여 이동 및 선택
-      li.addEventListener('keydown', (e) => {
-        currentPortfolioItemIndex = handleListNavigation(
-          e,
-          Array.from(portfolioContentList.children), // NodeList를 배열로 변환
-          currentPortfolioItemIndex,
-          (newIndex) => {
-            currentPortfolioItemIndex = newIndex; // 인덱스 업데이트
-            updatePortfolioSelection(); // 선택 상태 업데이트
-          },
-          true // 무한 순환
-        );
-      });
-
+      li.dataset.index = index;
+      li.tabIndex = -1; // 초기엔 포커스 비활성
       portfolioContentList.appendChild(li);
+
+      // 카드 아이템 생성
+      const card = document.createElement('div');
+      card.className = 'p-card';
+      card.dataset.index = index;
+      card.style.backgroundImage = `url(./src/image/${item.img}.jpg)`;
+      thumbnailContainer.insertBefore(card, thumbnailContainer.firstChild);
     });
 
-    // 초기 포트폴리오 뷰 설정
-    currentPortfolioItemIndex = 0; // 항상 첫 번째 항목부터 시작
-    updatePortfolioSelection(); // 초기 선택 상태 및 썸네일 업데이트
-
-    // 마우스 휠 이벤트를 viewer에 추가 (passive: false로 기본 스크롤 방지)
-    if (portfolioListContainer) {
-      portfolioListContainer.addEventListener('wheel', handlePortfolioWheel, {
-        passive: false
-      });
+    if (portfolioContentList.children.length > 0) {
+      portfolioContentList.children[0].tabIndex = 0; // 첫 아이템만 포커스 가능
     }
+
+    // 2. 이벤트 리스너 등록 (이벤트 위임 사용)
+    portfolioContentList.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (li) {
+        updatePortfolioSelection(parseInt(li.dataset.index, 10));
+      }
+    });
+
+    portfolioContentList.addEventListener('keydown', (e) => {
+      if (!['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      e.preventDefault();
+
+      let newIndex = currentPortfolioItemIndex;
+      const total = portfolioItems.length;
+
+      if (e.key === 'ArrowUp') {
+        newIndex = (currentPortfolioItemIndex - 1 + total) % total;
+      } else if (e.key === 'ArrowDown') {
+        newIndex = (currentPortfolioItemIndex + 1) % total;
+      }
+
+      if (newIndex !== currentPortfolioItemIndex) {
+        const items = portfolioContentList.children;
+        items[currentPortfolioItemIndex].tabIndex = -1;
+        items[newIndex].tabIndex = 0;
+        items[newIndex].focus();
+        updatePortfolioSelection(newIndex);
+      }
+    });
+
+    // 3. 마우스 휠 이벤트
+    // if (portfolioListContainer) {
+    //   portfolioListContainer.addEventListener('wheel', (e) => {
+    //     e.preventDefault();
+    //     const total = portfolioItems.length;
+    //     let newIndex = currentPortfolioItemIndex;
+
+    //     if (e.deltaY > 0) {
+    //       newIndex = (currentPortfolioItemIndex + 1) % total;
+    //     } else {
+    //       newIndex = (currentPortfolioItemIndex - 1 + total) % total;
+    //     }
+    //     updatePortfolioSelection(newIndex, false); // 휠 스크롤 시에는 li에 포커스 이동 안함
+    //   });
+    // }
+
+    // 4. 초기 상태 설정
+    updatePortfolioSelection(0);
   }
 
   /**
@@ -1786,29 +1817,204 @@
     });
   }
 
+  /**
+   * [신규] 기여도 바 UI를 업데이트하는 함수
+   * @param {string|number} contribution - 기여도 퍼센티지
+   */
+  function updateContributionBar(contribution) {
+    const contributionBarFill = document.querySelector('.contribution_bar_fill');
+    if (!contributionBarFill) return;
+
+    const contributionValue = typeof contribution === 'string' ? parseInt(contribution, 10) : contribution;
+    // requestAnimationFrame을 사용하여 부드러운 애니메이션 보장
+    requestAnimationFrame(() => {
+      contributionBarFill.style.width = `${contributionValue || 0}%`;
+    });
+  }
+
+  /**
+   * [신규] 사용 스킬 목록을 업데이트하는 함수
+   * @param {Array} useSkills - 사용된 스킬 배열 (문자열 배열 또는 객체 배열)
+   */
+  async function updateUseSkillList(useSkills) {
+    const useSkillList = document.querySelector('.use_skill_list');
+    if (!useSkillList || !useSkills || useSkills.length === 0) {
+      if (useSkillList) {
+        useSkillList.innerHTML = '<li class="no-skills">사용 스킬 정보가 없습니다.</li>';
+      }
+      return;
+    }
+
+    try {
+      // 첫 번째 요소가 객체인지 문자열인지 확인
+      const isObjectFormat = typeof useSkills[0] === 'object' && useSkills[0].skill;
+
+      // 기존 li 요소들 제거
+      useSkillList.innerHTML = '';
+
+      // 객체 형태가 아닌 경우에만 skillList.json 로드
+      let skillData = null;
+      if (!isObjectFormat) {
+        skillData = await loadSkillData();
+      }
+
+      // 각 사용 스킬에 대해 li 요소 생성
+      useSkills.forEach((skillItem, index) => {
+        let skillName, skillPercentage;
+
+        if (isObjectFormat) {
+          // 객체 형태: {skill: "JavaScript", percentage: 75}
+          skillName = skillItem.skill;
+          skillPercentage = skillItem.percentage;
+        } else {
+          // 문자열 형태: "JavaScript"
+          skillName = skillItem;
+          skillPercentage = 0; // 기본값
+
+          // 1. 프로젝트 데이터에 useSkillPercentage 배열이 있는지 확인
+          const currentProject = portfolioData[0][currentPortfolioItemIndex];
+          if (currentProject.useSkillPercentage && currentProject.useSkillPercentage[index]) {
+            skillPercentage = currentProject.useSkillPercentage[index];
+          } else {
+            // 2. skillList.json에서 퍼센테이지 찾기 (fallback)
+            const skillInfo = skillData.find(skill =>
+              skill.skill.toLowerCase() === skillName.toLowerCase()
+            );
+            skillPercentage = skillInfo ? skillInfo.percentage : 0;
+          }
+        }
+
+        const li = document.createElement('li');
+        li.className = 'skill-item';
+        li.style.animationDelay = `${index * 0.1}s`; // 순차적 애니메이션
+
+        // 퍼센테이지가 있으면 프로그레스 바와 함께 표시
+        if (skillPercentage > 0) {
+          li.innerHTML = `
+            <span class="skill-name">${skillName}</span>
+            <div class="skill-progress">
+              <div class="skill-progress-bar">
+                <div class="skill-progress-fill" data-percentage="${skillPercentage}"></div>
+              </div>
+              <span class="skill-percentage">${skillPercentage}%</span>
+            </div>
+          `;
+        } else {
+          // 퍼센테이지가 없는 경우 기본 스타일로 표시
+          li.innerHTML = `
+            <span class="skill-name">${skillName}</span>
+            <div class="skill-progress">
+              <div class="skill-progress-bar">
+                <div class="skill-progress-fill" data-percentage="0"></div>
+              </div>
+              <span class="skill-percentage">-</span>
+            </div>
+          `;
+        }
+
+        useSkillList.appendChild(li);
+      });
+
+      // 애니메이션 트리거 (약간의 지연 후)
+      setTimeout(() => {
+        animateSkillProgressBars();
+      }, 100);
+
+    } catch (error) {
+      console.error('사용스킬 데이터 로드 실패:', error);
+      // 에러 발생 시 스킬명만 표시
+      useSkillList.innerHTML = '';
+      useSkills.forEach((skillItem, index) => {
+        const skillName = typeof skillItem === 'object' ? skillItem.skill : skillItem;
+        const li = document.createElement('li');
+        li.className = 'skill-item error';
+        li.style.animationDelay = `${index * 0.1}s`;
+        li.innerHTML = `
+          <span class="skill-name">${skillName}</span>
+          <div class="skill-progress">
+            <span class="skill-percentage">-</span>
+          </div>
+        `;
+        useSkillList.appendChild(li);
+      });
+    }
+  }
+
+  /**
+   * [신규] 스킬 프로그레스 바 애니메이션 실행
+   */
+  function animateSkillProgressBars() {
+    const skillFills = document.querySelectorAll('.use_skill_list .skill-progress-fill');
+
+    skillFills.forEach((fill, index) => {
+      const targetPercentage = fill.getAttribute('data-percentage');
+
+      setTimeout(() => {
+        fill.style.transition = 'width 1s ease-out';
+        fill.style.width = `${targetPercentage}%`;
+      }, index * 150); // 150ms씩 지연하여 순차적 애니메이션
+    });
+  }
 
   /**
    * 포트폴리오 선택 아이템 업데이트 (active 클래스 및 썸네일)
    */
-  function updatePortfolioSelection() {
-    if (!portfolioContentList || portfolioData.length === 0 || !portfolioData[0]) return;
+  function updatePortfolioSelection(newIndex, focusLi = true) {
+    const oldIndex = currentPortfolioItemIndex;
+    if (newIndex === oldIndex && newIndex !== 0) return;
 
+    currentPortfolioItemIndex = newIndex;
     const allLiElements = portfolioContentList.querySelectorAll('li');
-    // 모든 li에서 active 클래스 제거
-    allLiElements.forEach(li => li.classList.remove('active'));
 
-    // 현재 선택된 아이템에 active 클래스 추가
-    if (allLiElements[currentPortfolioItemIndex]) {
-      allLiElements[currentPortfolioItemIndex].classList.add('active');
+    // 컨트롤러(li) 활성 상태 업데이트
+    allLiElements.forEach((li, index) => {
+      li.classList.toggle('active', index === newIndex);
+    });
 
-      // 썸네일 이미지 업데이트
-      const selectedItem = portfolioData[0][currentPortfolioItemIndex];
-      if (selectedItem) {
-        updateThumbnail(selectedItem.img, selectedItem.link);
-      }
+    if (focusLi) {
+      allLiElements[newIndex]?.focus();
     }
+
+    const selectedItem = portfolioData[0][newIndex];
+    if (selectedItem) {
+      updateContributionBar(selectedItem.contribution);
+      // 사용 스킬 목록 업데이트
+      updateUseSkillList(selectedItem.useSkill);
+    }
+
+    // 카드 애니메이션 업데이트
+    updateCardAnimation(newIndex, oldIndex);
   }
 
+  /**
+   * 카드 스택 애니메이션을 제어하는 함수
+   */
+  function updateCardAnimation(currentIndex, previousIndex) {
+    const thumbnailContainer = mainElement.querySelector('.content_thumbnail');
+    if (!thumbnailContainer) return;
+
+    const cards = thumbnailContainer.querySelectorAll('.p-card');
+    const totalCards = cards.length;
+
+    // 다음 카드의 인덱스 계산
+    const nextIndex = (currentIndex + 1) % totalCards;
+
+    // 모든 카드의 상태 클래스 초기화
+    cards.forEach(card => card.classList.remove('card--current', 'card--next', 'card--out'));
+
+    // 이전 카드에 퇴장 애니메이션 클래스 추가
+    if (previousIndex !== undefined && cards[previousIndex]) {
+      cards[previousIndex].classList.add('card--out');
+    }
+
+    // 현재 카드와 다음 카드에 상태 클래스 추가
+    if (cards[currentIndex]) {
+      cards[currentIndex].classList.add('card--current');
+    }
+    if (cards[nextIndex]) {
+      cards[nextIndex].classList.add('card--next');
+    }
+  }
   /**
    * 포트폴리오 마우스 휠 핸들러 (아이템 단위 무한 롤링)
    */
@@ -1836,11 +2042,13 @@
 
   /**
    * 썸네일 이미지 및 링크 업데이트
-   * @param {string} imgName - 이미지 파일명 (확장자 제외)
+   * @param {string} imgName - 이미지 파일 경로 (확장자 포함)
    * @param {string} link - 연결할 URL
+   * @param {string|number} contribution - 기여도 퍼센티지
    */
-  function updateThumbnail(imgName, link) {
+  function updateThumbnail(imgName, link, contribution) {
     const thumbnailAnchor = document.querySelector('.content_thumbnail a');
+    const contributionBarFill = document.querySelector('.contribution_bar_fill');
     if (thumbnailAnchor) {
       thumbnailAnchor.style.backgroundImage = `url(./src/image/${imgName}.jpg)`;
       thumbnailAnchor.href = link || '#none'; // 링크가 없으면 #none으로 설정
@@ -1856,6 +2064,11 @@
         thumbnailAnchor.style.cursor = 'default';
         thumbnailAnchor.onclick = null; // 클릭 이벤트 제거
       }
+    }
+
+    if (contributionBarFill && contribution !== undefined) {
+      const contributionValue = typeof contribution === 'string' ? parseInt(contribution, 10) : contribution;
+      contributionBarFill.style.width = `${contributionValue}%`;
     }
   }
 
