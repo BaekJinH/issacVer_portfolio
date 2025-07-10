@@ -13,8 +13,8 @@
 
   // 2. 상태 변수
   let currentFocusedOptionIndex = 0; // 메인 메뉴 포커스 인덱스
-  let currentAboutContentIndex = 0; // [수정] About 섹션 슬라이드 인덱스 (이름 명확화)
-  let aboutKeyDownHandler = null; // [추가] About 섹션 이벤트 핸들러 참조 저장용
+  let currentAboutContentIndex = 0; // About 섹션 슬라이드 인덱스 (이름 명확화)
+  let aboutKeyDownHandler = null; // About 섹션 이벤트 핸들러 참조 저장용
   let portfolioData = []; // 포트폴리오 데이터
   let currentPortfolioItemIndex = 0; // 포트폴리오 목록에서 현재 선택된 아이템 인덱스
   let currentBlogIconIndex = 0; // 블로그 섹션 아이콘 네비게이션 인덱스
@@ -27,6 +27,17 @@
   const DICE_TRANSITION_DURATION = 200; // dice_wrapper 트랜지션 시간 (ms)
   const PORTFOLIO_ITEM_HEIGHT_REM = 3; // 포트폴리오 리스트 li 한 칸의 높이 (rem)
   const PORTFOLIO_VIEW_COUNT = 8; // 포트폴리오 목록에 한 번에 보여지는 아이템 수
+
+  // About 섹션 캐릭터별 특징 배열
+  const CHARACTER_FEATURES = [
+    "첫 취업 웹 퍼블리셔 / 실무 경험 부족 /<br>자신감 부족 상태",
+    "경력 1년 8개월 / 잦은 파견 및 과도한 업무로 실무경험 다량 /<br>주변인, 경영진의 평가가 좋음",
+    "경력 포기 후 컨텐츠 작업 다수 위해 인턴 취업 /<br>자신의 역량 파악 후 자신감 더욱 상승 / 주변인, 경영진의 평가가 좋음",
+    "고등학교 3학년 원하는 바였던<br>서양학과를 포기 후 진로 미결정",
+    "비슷한 과인 디지털 미디어과 입학하였으나<br>생각과 많이 다름 / 코딩 첫 경험",
+    "대학 자퇴 후 방황 중 군 입대",
+    "전역 후 대학 때 첫 경험한 코딩이 흥미로웠다는걸<br>느끼고 코딩 공부 시작 / 퍼블리싱 아카데미 시작"
+  ];
 
   /**
    * 포커스 관리 함수들
@@ -214,6 +225,28 @@
         // [추가] Blog 섹션 정리
         if (className === 'blog') {
           sectionWrapper.classList.remove('glitch-active');
+
+          // 픽셀 윈도우 닫기
+          const pixelWindow = document.querySelector('#pixel_window');
+          if (pixelWindow && pixelWindow.classList.contains('visible')) {
+            closePixelWindow();
+          }
+
+          // 스킬 픽셀 윈도우 닫기 및 정리
+          const skillWindow = document.querySelector('#skill_pixel_window');
+          if (skillWindow) {
+            if (skillWindow.classList.contains('visible')) {
+              closeSkillPixelWindow();
+            }
+            // 스킬 윈도우 이벤트 리스너 정리
+            if (skillWindow._closeListeners) {
+              document.removeEventListener('keydown', skillWindow._closeListeners.keydown);
+              document.removeEventListener('keydown', skillWindow._closeListeners.focusTrap);
+              skillWindow.removeEventListener('click', skillWindow._closeListeners.click);
+              delete skillWindow._closeListeners;
+            }
+          }
+
           // 팝업 닫기
           const popupWrapper = document.querySelector('#popup_wrapper');
           if (popupWrapper) {
@@ -262,8 +295,15 @@
       option.classList.add('focused');
     });
 
-    // 키보드 네비게이션 (화살표 키, Enter 키)
+    // 키보드 네비게이션 (화살표 키, Tab 키, Enter 키)
     option.addEventListener('keydown', function (e) {
+      const isAnySectionActive = SECTION_CLASSES.some(className => mainElement.classList.contains(className));
+
+      // 섹션이 활성화된 상태에서는 메인 메뉴 네비게이션 비활성화
+      if (isAnySectionActive) {
+        return;
+      }
+
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         const prevIndex = currentFocusedOptionIndex > 0 ? currentFocusedOptionIndex - 1 : selectOptions.length - 1;
@@ -272,6 +312,18 @@
         e.preventDefault();
         const nextIndex = currentFocusedOptionIndex < selectOptions.length - 1 ? currentFocusedOptionIndex + 1 : 0;
         selectOptions[nextIndex].focus();
+      } else if (e.key === 'Tab') {
+        // Tab 키로 메뉴 내에서 순환 (Shift+Tab은 역방향)
+        e.preventDefault();
+        if (e.shiftKey) {
+          // Shift+Tab: 이전 옵션으로
+          const prevIndex = currentFocusedOptionIndex > 0 ? currentFocusedOptionIndex - 1 : selectOptions.length - 1;
+          selectOptions[prevIndex].focus();
+        } else {
+          // Tab: 다음 옵션으로
+          const nextIndex = currentFocusedOptionIndex < selectOptions.length - 1 ? currentFocusedOptionIndex + 1 : 0;
+          selectOptions[nextIndex].focus();
+        }
       } else if (e.key === 'Enter') {
         handleOptionActivation(e, option);
       }
@@ -281,8 +333,13 @@
     option.addEventListener('blur', function (e) {
       const isAnySectionActive = SECTION_CLASSES.some(className => mainElement.classList.contains(className));
       if (!isAnySectionActive && !e.relatedTarget?.closest('.select_option')) {
-        e.preventDefault();
-        selectOptions[currentFocusedOptionIndex].focus();
+        // 약간의 지연을 두고 포커스를 다시 설정 (다른 이벤트들이 완료된 후)
+        setTimeout(() => {
+          const stillNoSectionActive = !SECTION_CLASSES.some(className => mainElement.classList.contains(className));
+          if (stillNoSectionActive && !document.activeElement?.closest('.select_option')) {
+            selectOptions[currentFocusedOptionIndex].focus();
+          }
+        }, 0);
       }
     });
   });
@@ -315,25 +372,138 @@
     }
   });
 
-  // 전체화면 진입 (첫 번째 사용자 상호작용 시)
-  let hasRequestedFullscreen = false;
-  const requestFullscreenOnce = () => {
-    if (!hasRequestedFullscreen && !document.fullscreenElement) {
-      hasRequestedFullscreen = true;
-      document.documentElement.requestFullscreen().catch(() => {
-        console.log('전체화면 진입이 허용되지 않았습니다.');
-      });
+  // 전체화면 토글 기능
+  const fullscreenToggleBtn = document.querySelector('.fullscreen_toggle_btn');
+  const fullscreenIcon = document.querySelector('.fullscreen_icon');
+  const fullscreenText = document.querySelector('.fullscreen_text');
+
+  /**
+   * 전체화면 상태를 토글합니다.
+   */
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        // 전체화면 진입
+        await document.documentElement.requestFullscreen();
+        fullscreenIcon.textContent = '⛸'; // 축소 아이콘
+        fullscreenText.textContent = '창모드';
+      } else {
+        // 전체화면 종료
+        await document.exitFullscreen();
+        fullscreenIcon.textContent = '⛶'; // 확대 아이콘
+        fullscreenText.textContent = '전체화면';
+      }
+    } catch (error) {
+      console.log('전체화면 전환 중 오류가 발생했습니다:', error);
     }
   };
-  document.addEventListener('click', requestFullscreenOnce, {
-    once: true
-  });
-  document.addEventListener('keydown', requestFullscreenOnce, {
-    once: true
-  });
-  document.addEventListener('touchstart', requestFullscreenOnce, {
-    once: true
-  });
+
+  /**
+   * 전체화면 상태 변경 감지 및 UI 업데이트
+   */
+  const handleFullscreenChange = () => {
+    if (document.fullscreenElement) {
+      fullscreenIcon.textContent = '⛸';
+      fullscreenText.textContent = '창모드';
+    } else {
+      fullscreenIcon.textContent = '⛶';
+      fullscreenText.textContent = '전체화면';
+    }
+  };
+
+  // 전체화면 버튼 이벤트 리스너
+  if (fullscreenToggleBtn) {
+    fullscreenToggleBtn.addEventListener('click', toggleFullscreen);
+    fullscreenToggleBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+  }
+
+  // 전체화면 상태 변경 감지
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+  // 키보드 입력 시각적 피드백 시스템
+  const keyboardInfoSpans = document.querySelectorAll('.keyboard_info_text p span');
+
+  /**
+   * 키보드 입력에 대한 시각적 피드백을 제공합니다.
+   */
+  const handleKeyboardFeedback = () => {
+    // 키와 span 요소 매핑
+    const keyMapping = {
+      'ArrowLeft': {
+        span: keyboardInfoSpans[0],
+        class: 'arrow-left'
+      }, // ←
+      'ArrowRight': {
+        span: keyboardInfoSpans[1],
+        class: 'arrow-right'
+      }, // →
+      'ArrowUp': {
+        span: keyboardInfoSpans[2],
+        class: 'arrow-up'
+      }, // ↑
+      'ArrowDown': {
+        span: keyboardInfoSpans[3],
+        class: 'arrow-down'
+      }, // ↓
+      'Tab': {
+        span: keyboardInfoSpans[4],
+        class: 'tab-key'
+      }, // TAB
+      'Enter': {
+        span: keyboardInfoSpans[5],
+        class: 'enter-key'
+      } // ENTER
+    };
+
+    /**
+     * 키가 눌렸을 때 시각적 효과 추가
+     */
+    const handleKeyDown = (e) => {
+      // 메인 화면에서만 작동 (섹션이 활성화되지 않은 상태)
+      const isMainScreen = !SECTION_CLASSES.some(className =>
+        mainElement.classList.contains(className)
+      );
+
+      if (!isMainScreen) return;
+
+      const keyInfo = keyMapping[e.key];
+      if (keyInfo && keyInfo.span) {
+        // key-pressed 클래스와 특정 키 클래스 추가
+        keyInfo.span.classList.add('key-pressed', keyInfo.class);
+
+        // 접근성을 위한 aria 속성 추가
+        keyInfo.span.setAttribute('aria-pressed', 'true');
+      }
+    };
+
+    /**
+     * 키를 뗐을 때 시각적 효과 제거 (지연 후)
+     */
+    const handleKeyUp = (e) => {
+      const keyInfo = keyMapping[e.key];
+      if (keyInfo && keyInfo.span) {
+        // 0.6초 후 효과 제거 (애니메이션 완료 후)
+        setTimeout(() => {
+          keyInfo.span.classList.remove('key-pressed', keyInfo.class);
+          keyInfo.span.removeAttribute('aria-pressed');
+        }, 600);
+      }
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+  };
+
+  // 키보드 피드백 시스템 초기화
+  if (keyboardInfoSpans.length >= 6) {
+    handleKeyboardFeedback();
+  }
 
   /**
    * 범용 리스트 네비게이션 핸들러 함수
@@ -397,11 +567,27 @@
 
   /**
    * 11-1. About 섹션 캐러셀 UI 업데이트
-   * 클래스(active, prev, next)와 tabindex를 설정합니다.
+   * 클래스(active, prev, next)와 tabindex를 설정하고, 현재 캐릭터의 특징을 표시합니다.
    */
   const updateAboutCarousel = () => {
     if (!aboutContent || aboutContent.length === 0) return;
     const total = aboutContent.length;
+
+    // 현재 캐릭터의 특징 업데이트
+    const characterFeatureElement = document.querySelector('.character_feature span');
+    const characterFeatureContainer = document.querySelector('.character_feature');
+
+    if (characterFeatureElement && CHARACTER_FEATURES[currentAboutContentIndex]) {
+      characterFeatureElement.innerHTML = CHARACTER_FEATURES[currentAboutContentIndex];
+
+      // 애니메이션 트리거를 위해 클래스 제거 후 다시 추가
+      if (characterFeatureContainer) {
+        characterFeatureContainer.classList.remove('animate');
+        // 강제로 리플로우 발생시켜 클래스 제거를 즉시 적용
+        characterFeatureContainer.offsetHeight;
+        characterFeatureContainer.classList.add('animate');
+      }
+    }
 
     // 각 위치별 스타일 정의 (translateX, translateY, scale, opacity, zIndex)
     // 이 값을 조절해서 아치의 모양과 크기를 커스텀할 수 있습니다! ✨
@@ -443,7 +629,7 @@
       }, // 왼쪽 2
       '3': {
         x: '15rem',
-        y: '-12rem',
+        y: '-11rem',
         scale: 0.4,
         opacity: 0.2,
         z: 2
@@ -1094,7 +1280,7 @@
       if (!icon) return;
 
       // Skill Note 버튼인 경우
-      if (icon.id === 'skill_note_btn') {
+      if (icon.id === 'skill_note_btn' || icon.classList.contains('skill_note_btn')) {
         handleSkillNoteClick({
           preventDefault: () => {},
           stopPropagation: () => {}
@@ -1102,18 +1288,13 @@
         return;
       }
 
-      // 외부 링크인 경우 (GitHub, Notion)
+      // 외부 링크인 경우 (GitHub, Notion) - 픽셀 윈도우에서 열기
       const href = icon.getAttribute('href');
-      const target = icon.getAttribute('target');
 
       if (href && href !== '#none') {
-        if (target === '_blank') {
-          // 새 창에서 열기
-          window.open(href, '_blank', 'noopener,noreferrer');
-        } else {
-          // 현재 창에서 열기
-          window.location.href = href;
-        }
+        const iconText = icon.querySelector('.icon_text');
+        const siteName = iconText ? iconText.textContent : 'Website';
+        openPixelWindow(href, siteName);
       }
     };
 
@@ -1122,21 +1303,20 @@
      * @param {Event} e - 클릭 이벤트
      */
     const handleSkillNoteClick = (e) => {
-      const popupWrapper = document.querySelector('#popup_wrapper');
       e.preventDefault();
       e.stopPropagation();
 
-      // 스킬 데이터 로드 및 팝업 표시
+      // 스킬 데이터 로드 및 픽셀 윈도우 표시
       loadSkillData()
         .then(skillData => {
           createSkillList(skillData);
-          popupWrapper.classList.add('visible');
+          openSkillPixelWindow();
         })
         .catch(error => {
           console.error('스킬 데이터 로드 실패:', error);
-          // 에러 발생 시에도 팝업은 보여주되, 에러 메시지 표시
+          // 에러 발생 시에도 윈도우는 보여주되, 에러 메시지 표시
           createErrorSkillList();
-          popupWrapper.classList.add('visible');
+          openSkillPixelWindow();
         });
     };
 
@@ -1210,32 +1390,27 @@
         updateBlogIconSelection();
       });
 
-      // 클릭 이벤트 - 외부 링크는 기본 동작 허용, Skill Note만 커스텀 처리
-      if (icon.id === 'skill_note_btn' || icon.classList.contains('skill_note_btn')) {
-        icon.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          currentBlogIconIndex = index;
-          updateBlogIconSelection();
-          activateBlogIcon(icon);
-        });
-      } else {
-        // GitHub, Notion 링크는 기본 클릭 동작 유지하되 인덱스는 업데이트
-        icon.addEventListener('click', () => {
-          currentBlogIconIndex = index;
-          updateBlogIconSelection();
-        });
-      }
+      // 모든 아이콘의 클릭 이벤트를 커스텀 처리
+      icon.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        currentBlogIconIndex = index;
+        updateBlogIconSelection();
+        activateBlogIcon(icon);
+      });
     });
 
     // 키보드 이벤트 리스너 등록
     wrapper.addEventListener('keydown', blogKeyDownHandler);
 
-    // 팝업 닫기 기능 초기화
-    initPopupCloseFeature();
+    // 스킬 픽셀 윈도우 초기화
+    initSkillPixelWindow();
 
     // 검색 기능 초기화
     initBlogSearchFeature(wrapper, blogIcons);
+
+    // 픽셀 윈도우 초기화
+    initPixelWindow();
 
     // 초기 선택 상태 설정
     updateBlogIconSelection();
@@ -1274,7 +1449,7 @@
    * @param {Array} skillData - 스킬 데이터 배열
    */
   const createSkillList = (skillData) => {
-    const skillListContainer = document.querySelector('#popup_wrapper .skill_list');
+    const skillListContainer = document.querySelector('#skill_pixel_window .skill_list');
     if (!skillListContainer) return;
 
     // 기존 리스트 초기화
@@ -1625,64 +1800,417 @@
   };
 
   /**
-   * 팝업 닫기 기능 초기화
+   * 픽셀 윈도우 열기
+   * @param {string} url - 열 URL
+   * @param {string} title - 윈도우 제목
    */
-  const initPopupCloseFeature = () => {
-    const popupWrapper = document.querySelector('#popup_wrapper');
-    const closeBtn = popupWrapper.querySelector('#popup_wrapper #close_btn');
-    if (!popupWrapper) return;
+  const openPixelWindow = (url, title = 'Browser') => {
+    const pixelWindow = document.querySelector('#pixel_window');
+    const iframe = document.querySelector('#pixel-iframe');
+    const addressText = document.querySelector('.address-text');
+    const windowTitleText = document.querySelector('.window-title-text');
+    const windowBody = document.querySelector('.pixel-window-body');
+    const loadingIndicator = document.querySelector('.loading-indicator');
 
-    /**
-     * 팝업 닫기 함수
-     */
-    const closePopup = () => {
-      popupWrapper.classList.remove('visible');
+    if (!pixelWindow || !iframe) return;
+
+    // 윈도우 제목 및 주소창 설정
+    windowTitleText.textContent = `${title} - Browser`;
+    addressText.textContent = url;
+
+    // 로딩 상태 표시
+    windowBody.classList.remove('loaded');
+    loadingIndicator.style.display = 'flex';
+
+    // iframe 로드
+    iframe.src = url;
+
+    // iframe 로드 완료 처리
+    const handleIframeLoad = () => {
+      setTimeout(() => {
+        windowBody.classList.add('loaded');
+        loadingIndicator.style.display = 'none';
+      }, 1000); // 로딩 애니메이션을 위한 최소 시간
     };
 
-    /**
-     * ESC 키로 팝업 닫기, Tab 키로 close 버튼 포커스
-     */
-    const handlePopupKeydown = (e) => {
-      if (!popupWrapper.classList.contains('visible')) return;
+    iframe.addEventListener('load', handleIframeLoad, {
+      once: true
+    });
 
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        closePopup();
-      } else if (e.key === 'Tab') {
-        // Tab 키를 누르면 무조건 close 버튼으로 포커스 이동
-        e.preventDefault();
-        e.stopPropagation();
-        closeBtn.focus();
+    // 윈도우 열기 애니메이션
+    pixelWindow.classList.add('visible', 'opening');
+
+    // 애니메이션 완료 후 opening 클래스 제거
+    setTimeout(() => {
+      pixelWindow.classList.remove('opening');
+    }, 500);
+
+    // 포커스 설정
+    const closeBtn = pixelWindow.querySelector('.close-btn');
+    if (closeBtn) {
+      closeBtn.focus();
+    }
+  };
+
+  /**
+   * 픽셀 윈도우 닫기
+   */
+  const closePixelWindow = () => {
+    const pixelWindow = document.querySelector('#pixel_window');
+    const iframe = document.querySelector('#pixel-iframe');
+
+    if (!pixelWindow) return;
+
+    // 닫기 애니메이션
+    pixelWindow.classList.remove('visible', 'opening', 'maximized');
+
+    // iframe 정리
+    setTimeout(() => {
+      if (iframe) {
+        iframe.src = '';
       }
+    }, 300);
+  };
+
+  /**
+   * 픽셀 윈도우 최대화/복원 토글
+   */
+  const toggleMaximizePixelWindow = () => {
+    const pixelWindow = document.querySelector('#pixel_window');
+    if (!pixelWindow) return;
+
+    pixelWindow.classList.toggle('maximized');
+  };
+
+  /**
+   * 픽셀 윈도우 새로고침
+   */
+  const refreshPixelWindow = () => {
+    const iframe = document.querySelector('#pixel-iframe');
+    const windowBody = document.querySelector('.pixel-window-body');
+    const loadingIndicator = document.querySelector('.loading-indicator');
+
+    if (!iframe || !windowBody) return;
+
+    // 로딩 상태 표시
+    windowBody.classList.remove('loaded');
+    loadingIndicator.style.display = 'flex';
+
+    // iframe 새로고침
+    iframe.src = iframe.src;
+
+    // 로드 완료 처리
+    const handleRefreshLoad = () => {
+      setTimeout(() => {
+        windowBody.classList.add('loaded');
+        loadingIndicator.style.display = 'none';
+      }, 1000);
     };
 
-    closeBtn.addEventListener('click', closePopup);
-    closeBtn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
+    iframe.addEventListener('load', handleRefreshLoad, {
+      once: true
+    });
+  };
+
+  /**
+   * 픽셀 윈도우 초기화
+   */
+  const initPixelWindow = () => {
+    const pixelWindow = document.querySelector('#pixel_window');
+    if (!pixelWindow) return;
+
+    // 컨트롤 버튼들
+    const closeBtn = pixelWindow.querySelector('.close-btn');
+    const maximizeBtn = pixelWindow.querySelector('.maximize-btn');
+    const minimizeBtn = pixelWindow.querySelector('.minimize-btn');
+    const refreshBtn = pixelWindow.querySelector('.refresh-btn');
+
+    // 닫기 버튼 이벤트
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closePixelWindow);
+      closeBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          closePixelWindow();
+        }
+      });
+    }
+
+    // 최대화 버튼 이벤트
+    if (maximizeBtn) {
+      maximizeBtn.addEventListener('click', toggleMaximizePixelWindow);
+      maximizeBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleMaximizePixelWindow();
+        }
+      });
+    }
+
+    // 최소화 버튼 이벤트 (실제로는 닫기와 동일하게 처리)
+    if (minimizeBtn) {
+      minimizeBtn.addEventListener('click', closePixelWindow);
+      minimizeBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          closePixelWindow();
+        }
+      });
+    }
+
+    // 새로고침 버튼 이벤트
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', refreshPixelWindow);
+      refreshBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          refreshPixelWindow();
+        }
+      });
+    }
+
+    // 픽셀 윈도우 전용 ESC 키 이벤트
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && pixelWindow.classList.contains('visible')) {
         e.preventDefault();
         e.stopPropagation();
-        closePopup();
+        closePixelWindow();
       }
     });
 
+    // 윈도우 외부 클릭으로 닫기 (선택사항)
+    pixelWindow.addEventListener('click', (e) => {
+      if (e.target === pixelWindow) {
+        closePixelWindow();
+      }
+    });
+
+    // taskbar의 외부 링크들도 픽셀 윈도우에서 열기
+    const taskbarIcons = document.querySelectorAll('#task_bar .sub_blog_icons a[href]:not([href="#none"])');
+    taskbarIcons.forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const href = icon.getAttribute('href');
+        if (href && href !== '#none') {
+          const img = icon.querySelector('img');
+          let siteName = 'Website';
+
+          if (img && img.src.includes('github')) {
+            siteName = 'GITHUB';
+          } else if (img && img.src.includes('notion')) {
+            siteName = 'NOTION';
+          }
+
+          openPixelWindow(href, siteName);
+        }
+      });
+    });
+
+    // taskbar의 스킬 노트 버튼 별도 처리
+    const taskbarSkillNoteBtn = document.querySelector('#task_bar .sub_blog_icons .skill_note_btn');
+    if (taskbarSkillNoteBtn) {
+      taskbarSkillNoteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // 스킬 데이터 로드 및 픽셀 윈도우 표시
+        loadSkillData()
+          .then(skillData => {
+            createSkillList(skillData);
+            openSkillPixelWindow();
+          })
+          .catch(error => {
+            console.error('스킬 데이터 로드 실패:', error);
+            // 에러 발생 시에도 윈도우는 보여주되, 에러 메시지 표시
+            createErrorSkillList();
+            openSkillPixelWindow();
+          });
+      });
+    }
+  };
+
+  /**
+   * 스킬 픽셀 윈도우 열기
+   */
+  const openSkillPixelWindow = () => {
+    const skillWindow = document.querySelector('#skill_pixel_window');
+    if (skillWindow) {
+      skillWindow.classList.add('visible');
+
+      // 창이 열리면 즉시 첫 번째 포커스 가능한 요소에 포커스 설정
+      setTimeout(() => {
+        const firstFocusableElement = skillWindow.querySelector('.skill-close-btn, .skill-maximize-btn, .skill-minimize-btn');
+        if (firstFocusableElement) {
+          firstFocusableElement.focus();
+        }
+      }, 50); // 애니메이션 시작 후 포커스 설정
+    }
+  };
+
+  /**
+   * 스킬 픽셀 윈도우 닫기
+   */
+  const closeSkillPixelWindow = () => {
+    const skillWindow = document.querySelector('#skill_pixel_window');
+    if (skillWindow) {
+      skillWindow.classList.remove('visible');
+    }
+  };
+
+  /**
+   * 스킬 픽셀 윈도우 최대화/복원 토글
+   */
+  const toggleMaximizeSkillPixelWindow = () => {
+    const skillWindow = document.querySelector('#skill_pixel_window');
+    if (skillWindow) {
+      skillWindow.classList.toggle('maximized');
+    }
+  };
+
+  /**
+   * 스킬 픽셀 윈도우 초기화
+   */
+  const initSkillPixelWindow = () => {
+    const skillWindow = document.querySelector('#skill_pixel_window');
+    if (!skillWindow) return;
+
+    const closeBtn = skillWindow.querySelector('.skill-close-btn');
+    const maximizeBtn = skillWindow.querySelector('.skill-maximize-btn');
+    const minimizeBtn = skillWindow.querySelector('.skill-minimize-btn');
+
     /**
-     * 팝업 외부 클릭 시 닫기
+     * 스킬 윈도우 포커스 트랩 구현
+     * @param {KeyboardEvent} e - 키보드 이벤트
      */
-    const handlePopupClick = (e) => {
-      if (e.target === popupWrapper && popupWrapper.classList.contains('visible')) {
-        closePopup();
+    const handleSkillWindowFocusTrap = (e) => {
+      if (!skillWindow.classList.contains('visible')) return;
+
+      if (e.key === 'Tab') {
+        const focusableElements = skillWindow.querySelectorAll(
+          '.skill-close-btn, .skill-maximize-btn, .skill-minimize-btn, .skill_list button, .skill_list a, [tabindex]:not([tabindex="-1"])'
+        );
+        const focusableArray = Array.from(focusableElements);
+
+        if (focusableArray.length === 0) return;
+
+        const firstElement = focusableArray[0];
+        const lastElement = focusableArray[focusableArray.length - 1];
+
+        if (e.shiftKey) { // Shift + Tab (역방향)
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else { // Tab (정방향)
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
 
-    // 이벤트 리스너 등록
-    document.addEventListener('keydown', handlePopupKeydown);
-    popupWrapper.addEventListener('click', handlePopupClick);
+    /**
+     * 스킬 윈도우 키보드 이벤트 핸들러
+     * @param {KeyboardEvent} e - 키보드 이벤트
+     */
+    const handleSkillWindowKeydown = (e) => {
+      if (!skillWindow.classList.contains('visible')) return;
+
+      // ESC 키로 윈도우 닫기
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSkillPixelWindow();
+        return;
+      }
+
+      // Enter 또는 Space 키로 버튼 활성화
+      if (e.key === 'Enter' || e.key === ' ') {
+        const activeElement = document.activeElement;
+
+        if (activeElement === closeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeSkillPixelWindow();
+          return;
+        }
+
+        if (activeElement === maximizeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleMaximizeSkillPixelWindow();
+          return;
+        }
+
+        if (activeElement === minimizeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeSkillPixelWindow();
+          return;
+        }
+      }
+    };
+
+    /**
+     * 스킬 윈도우 외부 클릭 이벤트 핸들러
+     * @param {MouseEvent} e - 마우스 이벤트
+     */
+    const handleSkillWindowClick = (e) => {
+      // 윈도우 내부 클릭은 무시
+      if (e.target.closest('.skill-pixel-window-content') ||
+        e.target.closest('.skill-pixel-window-header')) {
+        return;
+      }
+
+      // 윈도우 외부 클릭 시 닫기
+      if (skillWindow.classList.contains('visible')) {
+        closeSkillPixelWindow();
+      }
+    };
+
+    // 각 버튼에 tabindex와 키보드 이벤트 설정
+    [closeBtn, maximizeBtn, minimizeBtn].forEach(btn => {
+      if (btn) {
+        btn.tabIndex = 0; // 포커스 가능하도록 설정
+
+        // 클릭 이벤트
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (btn === closeBtn || btn === minimizeBtn) {
+            closeSkillPixelWindow();
+          } else if (btn === maximizeBtn) {
+            toggleMaximizeSkillPixelWindow();
+          }
+        });
+
+        // 키보드 이벤트 (개별 버튼용)
+        btn.addEventListener('keydown', (e) => {
+          if (!skillWindow.classList.contains('visible')) return;
+
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            btn.click(); // 클릭 이벤트 트리거
+          }
+        });
+      }
+    });
+
+    // 글로벌 이벤트 리스너
+    document.addEventListener('keydown', handleSkillWindowKeydown);
+    document.addEventListener('keydown', handleSkillWindowFocusTrap);
+    skillWindow.addEventListener('click', handleSkillWindowClick);
 
     // 정리 함수 저장 (뒤로가기 시 이벤트 리스너 제거용)
-    popupWrapper._closeListeners = {
-      keydown: handlePopupKeydown,
-      click: handlePopupClick
+    skillWindow._closeListeners = {
+      keydown: handleSkillWindowKeydown,
+      focusTrap: handleSkillWindowFocusTrap,
+      click: handleSkillWindowClick
     };
   };
 
@@ -1718,6 +2246,12 @@
     const portfolioItems = portfolioData[0];
     const thumbnailContainer = mainElement.querySelector('.content_thumbnail');
 
+    // 포트폴리오 뷰어의 높이를 상수를 사용해서 동적으로 설정
+    if (portfolioListContainer) {
+      const maxHeight = `${PORTFOLIO_VIEW_COUNT * PORTFOLIO_ITEM_HEIGHT_REM}rem`;
+      portfolioListContainer.style.maxHeight = maxHeight;
+    }
+
     // 기존 요소들 초기화
     thumbnailContainer.querySelectorAll('.p-card').forEach(card => card.remove());
     portfolioContentList.innerHTML = ''; // 썸네일 컨테이너도 비움
@@ -1732,9 +2266,11 @@
       portfolioContentList.appendChild(li);
 
       // 카드 아이템 생성
-      const card = document.createElement('div');
+      const card = document.createElement('a');
+      card.href = item.link;
       card.className = 'p-card';
       card.dataset.index = index;
+      card.target = '_blank';
       card.style.backgroundImage = `url(./src/image/${item.img}.jpg)`;
       thumbnailContainer.insertBefore(card, thumbnailContainer.firstChild);
     });
