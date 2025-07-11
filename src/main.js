@@ -35,16 +35,51 @@
   const DICE_TRANSITION_DURATION = 200; // dice_wrapper 트랜지션 시간 (ms)
   const PORTFOLIO_ITEM_HEIGHT_REM = 3; // 포트폴리오 리스트 li 한 칸의 높이 (rem)
   const PORTFOLIO_VIEW_COUNT = 8; // 포트폴리오 목록에 한 번에 보여지는 아이템 수
-
+  const CHARACTER_STATS = [{
+      speed: 50,
+      exp: 40,
+      skill: 40
+    },
+    {
+      speed: 70,
+      exp: 75,
+      skill: 60
+    },
+    {
+      speed: 100,
+      exp: 100,
+      skill: 100
+    },
+    {
+      speed: 0,
+      exp: 0,
+      skill: 0
+    },
+    {
+      speed: 0,
+      exp: 10,
+      skill: 10
+    },
+    {
+      speed: 0,
+      exp: 0,
+      skill: 0
+    },
+    {
+      speed: 20,
+      exp: 25,
+      skill: 30
+    }
+  ];
   // About 섹션 캐릭터별 특징 배열
   const CHARACTER_FEATURES = [
-    "첫 취업 웹 퍼블리셔 / 실무 경험 부족 /<br>자신감 부족 상태",
-    "경력 1년 8개월 / 잦은 파견 및 과도한 업무로 실무경험 다량 /<br>주변인, 경영진의 평가가 좋음",
-    "경력 포기 후 컨텐츠 작업 다수 위해 인턴 취업 /<br>자신의 역량 파악 후 자신감 더욱 상승 / 주변인, 경영진의 평가가 좋음",
+    "첫 취업 웹 퍼블리셔 /<br>실무 경험 부족 /<br>자신감 부족 상태",
+    "경력 1년 8개월 / 잦은 파견 및<br>과도한 업무로 실무경험 다량 /<br>주변인, 경영진의 평가가 좋음",
+    "경력 포기 후 경험 위해 인턴 취업 /<br>자신의 역량 파악 후 자신감 더욱 상승 /<br>주변인, 경영진의 평가가 좋음",
     "고등학교 3학년 원하는 바였던<br>서양학과를 포기 후 진로 미결정",
-    "비슷한 과인 디지털 미디어과 입학하였으나<br>생각과 많이 다름 / 코딩 첫 경험",
+    "디지털 미디어과 입학하였으나<br>생각과 많이 다름 / 코딩 첫 경험",
     "대학 자퇴 후 방황 중 군 입대",
-    "전역 후 대학 때 첫 경험한 코딩이 흥미로웠다는걸<br>느끼고 코딩 공부 시작 / 퍼블리싱 아카데미 시작"
+    "전역 후 대학 때 첫 경험한 코딩이<br>흥미로웠다는걸 느끼고<br>코딩 공부 시작 / 퍼블리싱 아카데미 시작"
   ];
 
   /**
@@ -752,6 +787,11 @@
       // 포커스는 중앙(active) 아이템에만 설정
       slide.tabIndex = (offset === 0) ? 0 : -1;
     });
+
+    // 스탯 애니메이션 실행 (약간의 지연 후)
+    setTimeout(() => {
+      animateCharacterStats(currentAboutContentIndex);
+    }, 500);
   };
   /**
    * 11-2. About 섹션 키보드 이벤트 핸들러 (좌우 방향키)
@@ -779,6 +819,260 @@
   };
 
   /**
+   * 스탯 애니메이션 시스템
+   */
+  const resetCharacterStats = () => {
+    // 모든 스탯 요소의 애니메이션 상태 리셋
+    document.querySelectorAll('.floating_info_text li.stat').forEach(statElement => {
+      statElement.classList.remove('animate', 'loading', 'high-level');
+      const progressFill = statElement.querySelector('.stat-progress-fill');
+      const valueElement = statElement.querySelector('.stat-value');
+
+      if (progressFill) progressFill.style.width = '0%';
+      if (valueElement) valueElement.textContent = '0';
+
+      // 파티클 제거
+      statElement.querySelectorAll('.pixel-particle').forEach(particle => {
+        particle.remove();
+      });
+    });
+  };
+
+  const animateCharacterStats = (characterIndex) => {
+    // 먼저 모든 스탯 리셋
+    resetCharacterStats();
+
+    const activeContent = document.querySelector('.about_content.active');
+    if (!activeContent) return;
+
+    const statElements = activeContent.querySelectorAll('.floating_info_text li.stat');
+    const stats = CHARACTER_STATS[characterIndex];
+
+    statElements.forEach((statElement, index) => {
+      const statType = ['speed', 'exp', 'skill'][index];
+      const targetValue = stats[statType];
+
+      // 글리치 효과 먼저
+      statElement.classList.add('loading');
+      createSoundEffect('glitch');
+      setTimeout(() => {
+        statElement.classList.remove('loading');
+        animateStatBar(statElement, targetValue, statType);
+      }, 300);
+    });
+  };
+
+  const animateStatBar = (statElement, targetValue, statType) => {
+    const progressFill = statElement.querySelector('.stat-progress-fill');
+    const valueElement = statElement.querySelector('.stat-value');
+
+    // 애니메이션 클래스 추가
+    statElement.classList.add('animate');
+
+    // 사운드 효과
+    createSoundEffect('stat-fill');
+
+    // 프로그레스 바 애니메이션
+    setTimeout(() => {
+      progressFill.style.width = `${targetValue}%`;
+    }, 100);
+
+    // 숫자 카운트업 애니메이션
+    animateNumber(valueElement, targetValue);
+
+    // 파티클 효과 생성
+    createPixelParticles(statElement, statType);
+
+    // 90% 이상이면 레벨업 효과
+    if (targetValue >= 90) {
+      setTimeout(() => {
+        statElement.classList.add('high-level');
+        createSoundEffect('level-up');
+      }, 1500);
+    }
+  };
+
+  const animateNumber = (element, targetValue) => {
+    let currentValue = 0;
+    const increment = targetValue / 50; // 50프레임에 걸쳐 애니메이션
+    const duration = 1500; // 1.5초
+    const frameTime = duration / 50;
+
+    const updateNumber = () => {
+      currentValue += increment;
+      if (currentValue >= targetValue) {
+        currentValue = targetValue;
+        element.textContent = Math.round(currentValue);
+        return;
+      }
+
+      element.textContent = Math.round(currentValue);
+      element.classList.add('counting');
+
+      setTimeout(() => {
+        element.classList.remove('counting');
+      }, 100);
+
+      setTimeout(updateNumber, frameTime);
+    };
+
+    updateNumber();
+  };
+
+  const createPixelParticles = (statElement, statType) => {
+    const colors = {
+      speed: '#4CAF50',
+      exp: '#FF9800',
+      skill: '#9C27B0'
+    };
+
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        const particle = document.createElement('div');
+        particle.className = 'pixel-particle';
+        particle.style.background = colors[statType];
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+
+        statElement.appendChild(particle);
+
+        // 파티클 제거
+        setTimeout(() => {
+          particle.remove();
+        }, 1000);
+      }, i * 100);
+    }
+  };
+
+  // 시각적 사운드 효과 (실제 사운드 대신)
+  const createSoundEffect = (type) => {
+    const soundEffects = {
+      'stat-load': '♪',
+      'stat-fill': '♫',
+      'level-up': '★',
+      'glitch': '◈'
+    };
+
+    const soundElement = document.createElement('div');
+    soundElement.textContent = soundEffects[type] || '♪';
+    soundElement.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5rem;
+      color: #FFD700;
+      z-index: 10000;
+      pointer-events: none;
+      animation: soundEffectPop 0.8s ease-out forwards;
+    `;
+
+    document.body.appendChild(soundElement);
+
+    setTimeout(() => {
+      soundElement.remove();
+    }, 800);
+  };
+
+  // 사운드 효과 애니메이션 (CSS에 추가할 키프레임)
+  const addSoundEffectStyles = () => {
+    if (!document.getElementById('sound-effect-styles')) {
+      const style = document.createElement('style');
+      style.id = 'sound-effect-styles';
+      style.textContent = `
+        @keyframes soundEffectPop {
+          0% {
+            transform: scale(0) rotate(0deg);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.2) rotate(180deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0.8) translateY(-50px) rotate(360deg);
+            opacity: 0;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  };
+
+  const initializeCharacterStats = () => {
+    // 사운드 효과 스타일 추가
+    addSoundEffectStyles();
+
+    aboutContent.forEach((content, index) => {
+      const floatingInfo = content.querySelector('.floating_info_text');
+      if (!floatingInfo) return;
+
+      // 기존 스탯 li 요소들을 찾거나 생성
+      const existingStats = floatingInfo.querySelectorAll('li.stat');
+
+      if (existingStats.length === 0) {
+        // 스탯 li가 없다면 생성
+        const stats = CHARACTER_STATS[index];
+        const statTypes = [{
+            key: 'speed',
+            label: 'SPEED',
+            icon: '⚡'
+          },
+          {
+            key: 'exp',
+            label: 'EXP',
+            icon: '⭐'
+          },
+          {
+            key: 'skill',
+            label: 'SKILL',
+            icon: '🎯'
+          }
+        ];
+
+        statTypes.forEach(statType => {
+          const li = document.createElement('li');
+          li.className = `stat stat-${statType.key}`;
+          li.innerHTML = `
+            <div class="stat-label">
+              <div class="stat-icon"></div>
+              <span>${statType.label}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="stat-progress-bg">
+                <div class="stat-progress-fill"></div>
+              </div>
+            </div>
+            <div class="stat-value">0</div>
+          `;
+          floatingInfo.appendChild(li);
+        });
+      } else {
+        // 기존 스탯 li가 있다면 구조 업데이트
+        existingStats.forEach((statElement, statIndex) => {
+          const statTypes = ['speed', 'exp', 'skill'];
+          const statType = statTypes[statIndex];
+
+          if (!statElement.querySelector('.stat-progress')) {
+            statElement.classList.add('stat', `stat-${statType}`);
+            statElement.innerHTML = `
+              <div class="stat-label">
+                <div class="stat-icon"></div>
+                <span>${statType.toUpperCase()}</span>
+              </div>
+              <div class="stat-progress">
+                <div class="stat-progress-bg">
+                  <div class="stat-progress-fill"></div>
+                </div>
+              </div>
+              <div class="stat-value">0</div>
+            `;
+          }
+        });
+      }
+    });
+  };
+
+  /**
    * 11-3. About 섹션 캐러셀 초기화
    */
   const initAboutCarousel = (wrapper) => {
@@ -789,6 +1083,9 @@
       }
     });
     currentAboutContentIndex = Math.floor(aboutContent.length / 2);
+
+    // 스탯 시스템 초기화
+    initializeCharacterStats();
     updateAboutCarousel();
 
     // 키보드 이벤트 리스너 등록
