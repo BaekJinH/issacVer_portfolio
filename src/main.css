@@ -956,7 +956,8 @@ main section {
 }
 
 .portfolio_wrapper .content_list_viewer {
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #F5F3E7;
   border: 1px solid #D4C4A8;
   position: absolute;
@@ -980,6 +981,35 @@ main section {
   transform: rotate(-5deg);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
+}
+
+/* 포트폴리오 리스트 스크롤바 스타일링 */
+.portfolio_wrapper .content_list_viewer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.portfolio_wrapper .content_list_viewer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portfolio_wrapper .content_list_viewer::-webkit-scrollbar-thumb {
+  background: #B8A888;
+  border-radius: 0;
+  border: 1px solid #8B785D;
+  box-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.portfolio_wrapper .content_list_viewer::-webkit-scrollbar-thumb:hover {
+  background: #C4B296;
+  border-color: #6B5A47;
+}
+
+.portfolio_wrapper .content_list_viewer::-webkit-scrollbar-thumb:active {
+  background: #A89684;
+  box-shadow:
+    inset 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .portfolio_wrapper .content_list {
