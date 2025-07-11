@@ -138,9 +138,9 @@ main.restart {}
   animation: menuBgPulse 8s ease-in-out infinite;
 }
 
-/* 메인 메뉴 배경 픽셀 파티클 효과 */
+/* 메인 메뉴 배경 픽셀 파티클 효과 - 보류 */
 .select_options_wrapper::before {
-  content: '';
+  content: none;
   position: absolute;
   top: 0;
   left: 0;
@@ -242,26 +242,26 @@ main.restart {}
   animation: menuItemEnter 1.2s ease-out forwards;
 }
 
-.select_options_wrapper .select_option:nth-child(1) {
+.select_options_wrapper .select_option:nth-of-type(1) {
   animation-delay: 0.2s;
 }
 
-.select_options_wrapper .select_option:nth-child(2) {
+.select_options_wrapper .select_option:nth-of-type(2) {
   margin-left: 1rem;
   animation-delay: 0.4s;
 }
 
-.select_options_wrapper .select_option:nth-child(3) {
+.select_options_wrapper .select_option:nth-of-type(3) {
   margin-left: 2rem;
   animation-delay: 0.6s;
 }
 
-.select_options_wrapper .select_option:nth-child(4) {
+.select_options_wrapper .select_option:nth-of-type(4) {
   margin-left: 3rem;
   animation-delay: 0.8s;
 }
 
-.select_options_wrapper .select_option:nth-child(5) {
+.select_options_wrapper .select_option:nth-of-type(5) {
   margin-left: 4rem;
   animation-delay: 1.0s;
 }
@@ -372,17 +372,18 @@ main.restart {}
   content: '';
   display: block;
   position: absolute;
-  left: 0;
-  top: 2.45rem;
-  width: 2.8rem;
-  height: 2.25rem;
-  background:
-    linear-gradient(90deg, transparent 0%, transparent 20%, rgba(139, 120, 93, 0.1) 20%, rgba(139, 120, 93, 0.1) 80%, transparent 80%),
-    linear-gradient(0deg, transparent 0%, transparent 20%, rgba(67, 56, 58, 0.05) 20%, rgba(67, 56, 58, 0.05) 80%, transparent 80%);
-  border: 1px solid rgba(67, 56, 58, 0.1);
+  left: -5.5rem;
+  top: 1.1rem;
+  width: 5rem;
+  height: auto;
+  aspect-ratio: 1/1;
   opacity: 0;
   transition: all 0.3s ease;
-  animation: selectorIdle 3s ease-in-out infinite;
+  background: url(./image/pixel_select_before_ico.png) no-repeat center center / 100%;
+  /* background:
+    linear-gradient(90deg, transparent 0%, transparent 20%, rgba(139, 120, 93, 0.1) 20%, rgba(139, 120, 93, 0.1) 80%, transparent 80%),
+    linear-gradient(0deg, transparent 0%, transparent 20%, rgba(67, 56, 58, 0.05) 20%, rgba(67, 56, 58, 0.05) 80%, transparent 80%);
+  animation: selectorIdle 3s ease-in-out infinite; */
 }
 
 @keyframes selectorIdle {
@@ -400,25 +401,18 @@ main.restart {}
 }
 
 .select_options_wrapper .select_option button:focus:before {
-  background:
-    /* 픽셀 패턴 배경 */
-    linear-gradient(45deg,
-      #ff4444 0%, #ff4444 25%,
-      #ff6666 25%, #ff6666 50%,
-      #ff4444 50%, #ff4444 75%,
-      #ff2222 75%, #ff2222 100%),
-    /* 추가 레이어 */
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 1px, transparent 1px),
-    radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.3) 1px, transparent 1px);
-  background-size: 4px 4px, 8px 8px, 6px 6px;
-  border: 2px solid #cc0000;
-  box-shadow:
-    inset 1px 1px 0px rgba(255, 255, 255, 0.4),
-    inset -1px -1px 0px rgba(0, 0, 0, 0.4),
-    0 0 8px rgba(255, 68, 68, 0.6),
-    0 0 15px rgba(255, 68, 68, 0.3);
+  /* filter: inset 1px 1px 0px rgba(255, 255, 255, 0.4), inset -1px -1px 0px rgba(0, 0, 0, 0.4), 0 0 8px rgba(128, 128, 128, 0.6), 0 0 15px rgba(240, 240, 240, 0.3); */
   opacity: 1;
-  animation: focusSelectorPulse 0.8s ease-in-out infinite;
+  /* background:
+  linear-gradient(45deg,
+    #ff4444 0%, #ff4444 25%,
+    #ff6666 25%, #ff6666 50%,
+    #ff4444 50%, #ff4444 75%,
+    #ff2222 75%, #ff2222 100%),
+  radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 1px, transparent 1px),
+  radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.3) 1px, transparent 1px);
+background-size: 4px 4px, 8px 8px, 6px 6px;
+  animation: focusSelectorPulse 0.8s ease-in-out infinite; */
 }
 
 @keyframes focusSelectorPulse {
@@ -439,11 +433,6 @@ main.restart {}
   border: 0;
   outline: none;
 }
-
-.select_options_wrapper .select_option button:focus:before {
-  background-color: red;
-}
-
 
 main .keyboard_info_text {
   position: absolute;
@@ -482,7 +471,7 @@ main .keyboard_info_text p span:nth-of-type(4) {
     1px 1px 0px rgba(67, 56, 58, 0.4),
     0 0 5px rgba(139, 120, 93, 0.3);
   font-size: 2.2rem;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem 0.6rem;
   background: linear-gradient(45deg, rgba(139, 120, 93, 0.1), rgba(107, 91, 71, 0.05));
   border: 1px solid rgba(67, 56, 58, 0.2);
   border-radius: 2px;
@@ -577,7 +566,7 @@ main .keyboard_info_text p span:nth-of-type(6) {
 
 main .keyboard_info_text br:nth-of-type(2)+span {
   display: block;
-  transform: translateY(1.2rem);
+  transform: translateY(1.8rem);
   color: #43383A;
   text-shadow:
     1px 1px 0px rgba(67, 56, 58, 0.3),
@@ -587,6 +576,227 @@ main .keyboard_info_text br:nth-of-type(2)+span {
     descriptionEnter 1.5s ease-out 2.5s forwards,
     descriptionTextGlow 8s ease-in-out 4s infinite;
 }
+
+main .keyboard_info_text .key_bind_tab,
+main .keyboard_info_text .key_bind_enter {
+  display: inline-block;
+  margin-top: 0.8rem;
+}
+
+/* 옵션 정보 텍스트 스타일 */
+.option_info {
+  position: fixed;
+  top: 50%;
+  left: 8rem;
+  transform: translateY(-50%);
+  z-index: 999;
+  pointer-events: none;
+  width: 25rem;
+  height: auto;
+}
+
+.option_info_wrapper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  background: rgba(67, 56, 58, 0.95);
+  border: 2px solid #8B785D;
+  border-radius: 0;
+  padding: 2rem;
+  box-shadow:
+    inset -3px -3px 0px rgba(0, 0, 0, 0.3),
+    inset 3px 3px 0px rgba(255, 255, 255, 0.1),
+    4px 4px 0px #6D5A47,
+    8px 8px 20px rgba(0, 0, 0, 0.4);
+  transform: rotate(-2deg);
+  overflow: hidden;
+}
+
+.option_info_wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    /* 픽셀 노이즈 패턴 */
+    radial-gradient(1px 1px at 10% 20%, rgba(255, 215, 0, 0.1) 50%, transparent 51%),
+    radial-gradient(1px 1px at 90% 80%, rgba(255, 215, 0, 0.1) 50%, transparent 51%),
+    radial-gradient(1px 1px at 30% 60%, rgba(184, 168, 136, 0.08) 50%, transparent 51%),
+    radial-gradient(1px 1px at 70% 40%, rgba(184, 168, 136, 0.08) 50%, transparent 51%);
+  background-size: 8px 8px, 8px 8px, 6px 6px, 6px 6px;
+  animation: infoNoise 4s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.option_info_text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(-50% - 300px), -50%);
+  width: calc(100% - 2rem);
+  text-align: center;
+  font-family: 'LanaPixel', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #FFD700;
+  text-shadow:
+    2px 2px 0px #B8860B,
+    1px 1px 8px rgba(255, 215, 0, 0.5);
+  line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 2;
+  transition: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.option_info_text.active {
+  opacity: 1;
+  visibility: visible;
+  animation:
+    infoTextEnter 0.6s cubic-bezier(0.23, 1, 0.320, 1) forwards,
+    infoTextGlow 3s ease-in-out 0.7s infinite;
+}
+
+.option_info_text.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 215, 0, 0.4) 50%,
+      transparent 100%);
+  animation: infoTextScan 1.5s ease-in-out 0.6s infinite;
+  pointer-events: none;
+}
+
+/* 옵션 정보 애니메이션 */
+@keyframes infoTextEnter {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% - 300px), -50%) scale(0.7) rotate(-5deg);
+    filter: blur(6px);
+    text-shadow: none;
+  }
+
+  25% {
+    opacity: 0.6;
+    transform: translate(calc(-50% - 100px), -50%) scale(0.9) rotate(-2deg);
+    filter: blur(3px);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: translate(calc(-50% + 20px), -50%) scale(1.05) rotate(1deg);
+    filter: blur(1px);
+  }
+
+  75% {
+    opacity: 0.95;
+    transform: translate(calc(-50% - 5px), -50%) scale(0.98) rotate(-0.5deg);
+    filter: blur(0px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    filter: blur(0px);
+    text-shadow:
+      2px 2px 0px #B8860B,
+      1px 1px 8px rgba(255, 215, 0, 0.5);
+  }
+}
+
+@keyframes infoTextGlow {
+
+  0%,
+  100% {
+    text-shadow:
+      2px 2px 0px #B8860B,
+      1px 1px 8px rgba(255, 215, 0, 0.5);
+    filter: brightness(1);
+  }
+
+  50% {
+    text-shadow:
+      2px 2px 0px #B8860B,
+      1px 1px 12px rgba(255, 215, 0, 0.8),
+      0 0 20px rgba(255, 215, 0, 0.3);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes infoTextScan {
+
+  0%,
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateX(100%);
+    opacity: 1;
+  }
+}
+
+@keyframes infoNoise {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+    opacity: 0.6;
+  }
+
+  25% {
+    transform: translateY(-2px);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translateY(0px);
+    opacity: 0.6;
+  }
+
+  75% {
+    transform: translateY(2px);
+    opacity: 0.8;
+  }
+}
+
+/* 옵션 정보 퇴장 애니메이션 */
+.option_info_text.exiting {
+  animation: infoTextExit 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+@keyframes infoTextExit {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+
+  30% {
+    opacity: 0.7;
+    transform: translate(calc(-50% + 50px), -50%) scale(1.1) rotate(3deg);
+    filter: blur(1px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + 300px), -50%) scale(0.6) rotate(8deg);
+    filter: blur(6px);
+  }
+}
+
+
 
 /* 메인 컨테이너 진입 애니메이션 */
 @keyframes keyboardInfoEnter {
@@ -1827,7 +2037,7 @@ main section {
   height: 100%;
 }
 
-.about_content .profile.profile_4 {
+.about_content .profile.profile_4 img {
   object-fit: cover;
 }
 
@@ -1849,7 +2059,7 @@ main section {
   left: 50%;
   transform: translateX(-50%);
   width: auto;
-  min-width: 200px;
+  min-width: 25rem;
   opacity: 0;
   color: #43383A;
   font-size: 11px;
@@ -1858,7 +2068,7 @@ main section {
   font-family: 'LanaPixel', monospace;
   background: rgba(202, 192, 186, 0.9);
   border: 2px solid #43383A;
-  padding: 12px 16px;
+  padding: 0.75rem 1rem;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.2),
     4px 4px 0px rgba(67, 56, 58, 0.8),
@@ -1868,13 +2078,13 @@ main section {
 .about_content .floating_info_text::before {
   content: '• CHARACTER INFO •';
   position: absolute;
-  top: -12px;
+  top: -0.75rem;
   left: 50%;
   transform: translateX(-50%);
   background: #43383A;
   color: #CAC0BA;
-  padding: 2px 8px;
-  font-size: 9px;
+  padding: 0.3rem 0.5rem 0.2rem;
+  font-size: 0.95rem;
   font-family: 'LanaPixel', monospace;
   letter-spacing: 1px;
 }
@@ -1886,8 +2096,10 @@ main section {
   width: 100%;
   text-transform: uppercase;
   margin: 0;
-  padding: 3px 0;
+  padding: 0.1875rem 0;
   border-bottom: 1px dashed rgba(67, 56, 58, 0.3);
+  font-weight: 500;
+  font-size: .985rem
 }
 
 .about_content .floating_info_text li:last-child {
@@ -1907,14 +2119,14 @@ main section {
   left: 50%;
   transform: translateX(-50%);
   color: #43383A;
-  font-size: 12px;
+  font-size: 1.12rem;
   font-weight: 400;
   letter-spacing: 0.08rem;
   font-family: 'LanaPixel', monospace;
   opacity: 0;
   background: rgba(202, 192, 186, 0.8);
   border: 2px solid #43383A;
-  padding: 8px 16px;
+  padding: 0.5rem 1rem;
   box-shadow:
     2px 2px 0px rgba(67, 56, 58, 0.8),
     4px 4px 0px rgba(67, 56, 58, 0.6);
@@ -1923,7 +2135,7 @@ main section {
 
 .about_inner .character_feature span {
   color: #6B5A47;
-  font-weight: 600;
+  font-weight: 500;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
 }
 
@@ -2068,8 +2280,7 @@ main section {
   justify-content: center;
   transform: translateY(-100%);
   overflow: hidden;
-  background:
-    /* 픽셀 그리드 오버레이 */
+  /* background:
     repeating-linear-gradient(0deg,
       transparent,
       transparent 1px,
@@ -2080,16 +2291,14 @@ main section {
       transparent 1px,
       rgba(139, 120, 93, 0.08) 1px,
       rgba(139, 120, 93, 0.08) 2px),
-    /* 픽셀 도트 패턴 */
     radial-gradient(circle at 1px 1px, rgba(160, 140, 120, 0.1) 1px, transparent 0),
-    /* 아이작 번제 스타일 그라데이션 배경 */
     linear-gradient(135deg,
       #8B785D 0%,
       #A0916E 25%,
       #CAC0BA 50%,
       #B8A892 75%,
       #9A8B74 100%);
-  background-size: 2px 2px, 2px 2px, 4px 4px, 100% 100%;
+  background-size: 2px 2px, 2px 2px, 4px 4px, 100% 100%; */
   font-family: 'LanaPixel', monospace;
 }
 
@@ -3823,6 +4032,44 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   .about_inner>h2 {
     top: 7rem;
   }
+
+  .option_info {
+    width: 20rem;
+    left: 4rem;
+  }
+
+  .option_info_wrapper {
+    padding: 1.5rem;
+  }
+
+  .option_info_text {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .option_info {
+    width: 22rem;
+    left: 6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .option_info {
+    width: 18rem;
+    left: 2rem;
+    top: 60%;
+  }
+
+  .option_info_wrapper {
+    padding: 1rem;
+    transform: rotate(-1deg);
+  }
+
+  .option_info_text {
+    font-size: 1.1rem;
+    white-space: normal;
+  }
 }
 
 /* 컨택트 진입/퇴장 애니메이션 - 픽셀 스타일 강화 */
@@ -3959,6 +4206,71 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   animation: menuParticleFloat5 20s ease-in-out infinite;
   animation-delay: 8s;
 }
+
+.menu-pixel-particle[data-particle="6"] {
+  top: 15%;
+  left: 25%;
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(45deg, #43383A, #6B5A47);
+  animation: menuParticleFloat1 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.menu-pixel-particle[data-particle="7"] {
+  top: 35%;
+  left: 35%;
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(45deg, #8B785D, #CAC0BA);
+  animation: menuParticleFloat2 10s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+.menu-pixel-particle[data-particle="8"] {
+  top: 85%;
+  left: 55%;
+  width: 5px;
+  height: 5px;
+  background: linear-gradient(45deg, #CAC0BA, #8B785D);
+  animation: menuParticleFloat3 10s ease-in-out infinite;
+  animation-delay: 6s;
+}
+
+.menu-pixel-particle[data-particle="9"] {
+  top: 30%;
+  left: 70%;
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(45deg, #43383A, #6B5A47);
+  animation: menuParticleFloat4 10s ease-in-out infinite;
+  animation-delay: 8s;
+}
+
+.menu-pixel-particle[data-particle="10"] {
+  top: 50%;
+  left: 40%;
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(45deg, #CAC0BA, #8B785D);
+  animation: menuParticleFloat5 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.menu-pixel-particle[data-particle="11"] {
+  top: 65%;
+  left: 85%;
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(45deg, #8B785D, #CAC0BA);
+  animation: menuParticleFloat3 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+
+
+
+
 
 @keyframes menuParticleFloat1 {
 

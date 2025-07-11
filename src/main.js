@@ -1,17 +1,7 @@
 // main.js
 
 !(function () {
-  // 1. DOM 요소 캐싱
-  const mainElement = document.querySelector('main');
-  const selectOptions = document.querySelectorAll('.select_option button');
-  const backButtons = document.querySelectorAll('.back_btn');
-  const aboutWrapper = mainElement.querySelector('.about_wrapper');
-  const aboutContentSlideWrapper = mainElement.querySelector('.about_content_slide_wrapper');
-  const aboutContent = aboutContentSlideWrapper ? aboutContentSlideWrapper.querySelectorAll('.about_content') : [];
-  const portfolioListContainer = mainElement.querySelector('.content_list_viewer');
-  const portfolioContentList = mainElement.querySelector('.content_list');
-
-  // 2. 상태 변수
+  // 1. 상태 변수 선언 (DOM 요소 캐싱보다 먼저)
   let currentFocusedOptionIndex = 0; // 메인 메뉴 포커스 인덱스
   let currentAboutContentIndex = 0; // About 섹션 슬라이드 인덱스 (이름 명확화)
   let aboutKeyDownHandler = null; // About 섹션 이벤트 핸들러 참조 저장용
@@ -20,6 +10,24 @@
   let currentBlogIconIndex = 0; // 블로그 섹션 아이콘 네비게이션 인덱스
   let blogKeyDownHandler = null; // 블로그 섹션 이벤트 핸들러 참조 저장용
   let originalTabIndexes = new Map();
+  let optionInfoTexts = []; // 옵션 정보 텍스트 요소들
+  let currentActiveInfoIndex = -1; // 현재 활성화된 정보 텍스트 인덱스
+
+  // 2. DOM 요소 캐싱
+  const mainElement = document.querySelector('main');
+  const selectOptions = document.querySelectorAll('.select_option button');
+  const backButtons = document.querySelectorAll('.back_btn');
+  const aboutWrapper = mainElement.querySelector('.about_wrapper');
+  const aboutContentSlideWrapper = mainElement.querySelector('.about_content_slide_wrapper');
+  const aboutContent = aboutContentSlideWrapper ? aboutContentSlideWrapper.querySelectorAll('.about_content') : [];
+  const portfolioListContainer = mainElement.querySelector('.content_list_viewer');
+  const portfolioContentList = mainElement.querySelector('.content_list');
+  const optionInfoWrapper = document.querySelector('.option_info_wrapper');
+
+  // optionInfoTexts 초기화
+  if (optionInfoWrapper) {
+    optionInfoTexts = Array.from(optionInfoWrapper.querySelectorAll('.option_info_text'));
+  }
 
   // 3. 상수 정의
   const SECTION_CLASSES = ['portfolio', 'about', 'contact', 'blog', 'restart'];
@@ -38,6 +46,58 @@
     "대학 자퇴 후 방황 중 군 입대",
     "전역 후 대학 때 첫 경험한 코딩이 흥미로웠다는걸<br>느끼고 코딩 공부 시작 / 퍼블리싱 아카데미 시작"
   ];
+
+  /**
+   * 옵션 정보 텍스트 관리 함수들
+   */
+
+  /**
+   * 옵션 정보 텍스트를 업데이트합니다.
+   * @param {number} index - 활성화할 텍스트의 인덱스
+   */
+  const updateOptionInfo = (index) => {
+    if (!optionInfoTexts || optionInfoTexts.length === 0) return;
+
+    // 모든 텍스트의 애니메이션을 즉시 중단하고 숨김
+    optionInfoTexts.forEach((text, textIndex) => {
+      // 모든 애니메이션 클래스 제거
+      text.classList.remove('active', 'exiting');
+
+      // 현재 선택된 인덱스가 아닌 모든 텍스트 숨김
+      if (textIndex !== index) {
+        text.style.opacity = '0';
+        text.style.visibility = 'hidden';
+      }
+    });
+
+    // 선택된 텍스트만 즉시 활성화 (지연 없음)
+    if (optionInfoTexts[index]) {
+      const targetText = optionInfoTexts[index];
+
+      // 스타일 초기화
+      targetText.style.opacity = '';
+      targetText.style.visibility = '';
+
+      // 작은 지연 후 활성화 (DOM 업데이트 보장)
+      requestAnimationFrame(() => {
+        targetText.classList.add('active');
+      });
+
+      currentActiveInfoIndex = index;
+    }
+  };
+
+  /**
+   * 모든 옵션 정보 텍스트를 숨깁니다.
+   */
+  const hideAllOptionInfo = () => {
+    optionInfoTexts.forEach(text => {
+      text.classList.remove('active', 'exiting');
+      text.style.opacity = '0';
+      text.style.visibility = 'hidden';
+    });
+    currentActiveInfoIndex = -1;
+  };
 
   /**
    * 포커스 관리 함수들
@@ -132,6 +192,9 @@
   const handleOptionActivation = (e, option) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // 섹션 활성화 시 옵션 정보 숨기기
+    hideAllOptionInfo();
 
     SECTION_CLASSES.forEach(className => mainElement.classList.remove(className));
 
@@ -273,6 +336,8 @@
     setTimeout(() => {
       if (selectOptions.length > 0) {
         selectOptions[currentFocusedOptionIndex].focus();
+        // 메인 메뉴로 돌아갈 때 현재 포커스된 옵션의 정보 표시
+        updateOptionInfo(currentFocusedOptionIndex);
       }
     }, DICE_TRANSITION_DURATION + 50);
   };
@@ -293,6 +358,12 @@
         otherOption.classList.remove('focused');
       });
       option.classList.add('focused');
+
+      // 옵션 정보 텍스트 업데이트 (메인 메뉴에서만)
+      const isAnySectionActive = SECTION_CLASSES.some(className => mainElement.classList.contains(className));
+      if (!isAnySectionActive) {
+        updateOptionInfo(index);
+      }
     });
 
     // 키보드 네비게이션 (화살표 키, Tab 키, Enter 키)
@@ -347,6 +418,8 @@
   // 8. 초기화: 페이지 로드 시 첫 번째 옵션에 포커스
   if (selectOptions.length > 0) {
     selectOptions[0].focus();
+    // 초기 로드 시 첫 번째 옵션 정보 표시
+    updateOptionInfo(0);
   }
 
   // 9. 뒤로가기 버튼 이벤트 리스너 등록
@@ -780,7 +853,7 @@
         angleY: 0,
         angleZ: 0,
         speedMultiplier: 1.0,
-        minSpeed: 0.003
+        minSpeed: 0.007
       },
       {
         baseRadius: 160,
@@ -788,7 +861,7 @@
         angleY: 10,
         angleZ: 15,
         speedMultiplier: 1.3,
-        minSpeed: 0.005
+        minSpeed: 0.008
       },
       {
         baseRadius: 200,
@@ -796,7 +869,7 @@
         angleY: -10,
         angleZ: -10,
         speedMultiplier: 0.8,
-        minSpeed: 0.002
+        minSpeed: 0.005
       }
     ];
 
