@@ -20,7 +20,7 @@
   position: absolute;
   top: 2rem;
   left: 2rem;
-  background: #F5F3E7;
+  background: #e7e7e7;
   border: 1px solid #D4C4A8;
   color: #6B5B47;
   padding: 0.6rem 1.2rem;
@@ -52,11 +52,11 @@
 
 .back_btn:hover {
   background: #EEEADE;
-  transform: rotate(-1.5deg) translateY(-2px);
   color: #5A4A37;
   box-shadow:
     4px 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 0 12px rgba(212, 196, 168, 0.3);
+  animation: backBtnHoverScalePulse 0.8s ease-in-out infinite;
 }
 
 .back_btn:active {
@@ -64,11 +64,13 @@
   box-shadow:
     2px 2px 6px rgba(0, 0, 0, 0.2),
     inset 2px 2px 6px rgba(0, 0, 0, 0.1);
+  animation: none;
 }
 
 .back_btn:focus {
   outline: 1px dashed #B8A888;
   outline-offset: 3px;
+  animation: backBtnFocusScalePulse 0.8s ease-in-out infinite;
 }
 
 main {
@@ -1165,18 +1167,18 @@ main section {
   height: 100%;
 }
 
+/* 해당 종이의 컨텐츠는 종이 모양 배경 제거 검토 */
 .portfolio_wrapper .content_list_viewer {
+  width: 50rem;
   overflow-y: auto;
   overflow-x: hidden;
-  background: #F5F3E7;
-  border: 1px solid #D4C4A8;
+  /* background: #e7e7e7; */
+  /* border: 1px solid #D4C4A8; */
   position: absolute;
-  left: 9rem;
-  top: 8rem;
-  transform: rotate(-1deg);
-  box-shadow:
-    3px 3px 8px rgba(0, 0, 0, 0.2),
-    inset 0 0 15px rgba(212, 196, 168, 0.3);
+  left: 6.5rem;
+  top: 4rem;
+  transform: rotate(-10deg);
+  /* box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2), inset 0 0 15px rgba(212, 196, 168, 0.3); */
   position: relative;
 }
 
@@ -1231,29 +1233,30 @@ main section {
 }
 
 .portfolio_wrapper .content_list li {
-  height: 3rem;
+  height: 4rem;
   display: flex;
   align-items: center;
   padding: 0 1rem;
   cursor: pointer;
-  border-bottom: 1px dashed #D4C4A8;
+  /* border-bottom: 1px dashed #D4C4A8; */
   transition: all 0.3s ease;
   color: #6B5B47;
   font-weight: 400;
   font-family: 'LanaPixel', monospace;
-  font-size: 10px;
+  font-size: 1rem;
   background: transparent;
   transform: rotate(0.5deg);
 }
 
 .portfolio_wrapper .content_list li:hover {
-  background: rgba(232, 220, 192, 0.3);
+  /* background: rgba(232, 220, 192, 0.3); */
   transform: rotate(-0.5deg) translateY(-2px);
   color: #5A4A37;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .portfolio_wrapper .content_list li.active {
+  font-weight: 600;
   background: rgba(232, 220, 192, 0.5);
   color: #4A3A27;
   transform: rotate(-0.3deg);
@@ -1270,21 +1273,18 @@ main section {
 }
 
 .portfolio_wrapper .content_thumbnail {
-  width: 25rem;
+  width: 41rem;
   height: auto;
-  aspect-ratio: 4.5 / 3;
+  aspect-ratio: 4.5 / 2.5;
   position: absolute;
   perspective: 1000px;
-  /* 입체적인 느낌을 위해 원근감 추가 */
-  bottom: 12rem;
-  right: 22rem;
-  background: #F5F3E7;
+  bottom: 5.5rem;
+  right: 9rem;
+  background: #e7e7e7;
   border: 1px solid #D4C4A8;
   padding: 12px;
   transform: rotate(1deg);
-  box-shadow:
-    4px 4px 12px rgba(0, 0, 0, 0.2),
-    inset 0 0 20px rgba(212, 196, 168, 0.2);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(212, 196, 168, 0.2);
 }
 
 .portfolio_wrapper .content_thumbnail::before {
@@ -1358,18 +1358,17 @@ main section {
 
 /* 사용 스킬 리스트 스타일 */
 .portfolio_wrapper .use_skill_wrapper {
+  width: 22rem;
   margin-top: 1rem;
   padding: 1.5rem;
-  background: #F5F3E7;
+  background: #e7e7e7;
   border: 1px solid #D4C4A8;
   border-radius: 0;
   position: absolute;
-  bottom: 12rem;
-  left: calc(50% - 20rem);
-  transform: translateX(-50%) rotate(-0.8deg);
-  box-shadow:
-    3px 3px 10px rgba(0, 0, 0, 0.2),
-    inset 0 0 15px rgba(212, 196, 168, 0.2);
+  bottom: 6rem;
+  left: calc(50% - 15.5rem);
+  transform: translateX(-50%) rotate(2.2deg);
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2), inset 0 0 15px rgba(212, 196, 168, 0.2);
 }
 
 .portfolio_wrapper .use_skill_wrapper::before {
@@ -1418,9 +1417,9 @@ main section {
 }
 
 .portfolio_wrapper .use_skill_list .skill-item .skill-name {
-  font-weight: 400;
+  font-weight: 500;
   color: #6B5B47;
-  font-size: 10px;
+  font-size: 1rem;
   min-width: 80px;
   flex-shrink: 0;
   font-family: 'LanaPixel', monospace;
@@ -1476,10 +1475,9 @@ main section {
 }
 
 .portfolio_wrapper .use_skill_list .skill-item .skill-percentage {
-  font-size: 9px;
+  font-size: 0.85rem;
   color: #6B5B47;
-  font-weight: 400;
-  min-width: 35px;
+  font-weight: 500;
   text-align: right;
   font-family: 'LanaPixel', monospace;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
@@ -1554,6 +1552,7 @@ main section {
   z-index: 5;
   opacity: 1;
   transform: translateY(-25px) translateX(15px) rotate(4deg) scale(0.95);
+  height: 90%;
 }
 
 /* 화면 밖으로 나가는 카드 (이전 카드) */
@@ -1607,7 +1606,7 @@ main section {
   font-family: 'LanaPixel', monospace;
   font-size: 10px;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
-  background: #F5F3E7;
+  background: #e7e7e7;
   border: 1px solid #D4C4A8;
   padding: 10px 18px;
   border-radius: 0;
@@ -2847,11 +2846,13 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   box-shadow:
     3px 3px 0px #CD853F,
     5px 5px 0px #A0522D;
+  animation: contactBackBtnScalePulse 0.6s ease-in-out infinite;
 }
 
 .contact_wrapper .back_btn:focus {
   outline: 2px solid #8B4513;
   outline-offset: 2px;
+  animation: contactBackBtnScalePulse 0.6s ease-in-out infinite;
 }
 
 .contact_wrapper .back_btn:active {
@@ -2860,6 +2861,7 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   box-shadow:
     1px 1px 0px #CD853F,
     2px 2px 0px #A0522D;
+  animation: none;
 }
 
 
@@ -3949,6 +3951,18 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   left: 17rem;
 }
 
+.blog_wrapper .back_btn:hover {
+  animation: backBtnHoverScalePulse 0.8s ease-in-out infinite;
+}
+
+.blog_wrapper .back_btn:focus {
+  animation: backBtnFocusScalePulse 0.6s ease-in-out infinite;
+}
+
+.blog_wrapper .back_btn:active {
+  animation: none;
+}
+
 /* 픽셀 도트 윈도우 스타일 */
 .pixel-window {
   position: fixed;
@@ -4255,6 +4269,66 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   50%,
   100% {
     opacity: 0;
+  }
+}
+
+/* 뒤로가기 버튼 호버 스케일 펄스 애니메이션 */
+@keyframes backBtnHoverScalePulse {
+  0% {
+    transform: rotate(-1.5deg) translateY(-2px) scale(1);
+  }
+
+  50% {
+    transform: rotate(-1.5deg) translateY(-2px) scale(1.08);
+  }
+
+  100% {
+    transform: rotate(-1.5deg) translateY(-2px) scale(1);
+  }
+}
+
+/* 뒤로가기 버튼 포커스 스케일 펄스 애니메이션 */
+@keyframes backBtnFocusScalePulse {
+  0% {
+    transform: rotate(-2deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(-2deg) scale(1.08);
+  }
+
+  100% {
+    transform: rotate(-2deg) scale(1);
+  }
+}
+
+/* 뒤로가기 버튼 기본 스케일 펄스 애니메이션 */
+@keyframes backBtnScalePulse {
+  0% {
+    transform: scale(1) rotate(-2deg);
+  }
+
+  50% {
+    transform: scale(1.08) rotate(-1.5deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(-2deg);
+  }
+}
+
+/* 컨택트 섹션 뒤로가기 버튼 스케일 펄스 애니메이션 */
+@keyframes contactBackBtnScalePulse {
+  0% {
+    transform: translate(-1px, -1px) scale(1);
+  }
+
+  50% {
+    transform: translate(-1px, -1px) scale(1.08);
+  }
+
+  100% {
+    transform: translate(-1px, -1px) scale(1);
   }
 }
 
