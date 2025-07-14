@@ -2574,6 +2574,82 @@ main section {
   z-index: 200;
 }
 
+/* 새로운 wrapper 시스템 사용으로 인해 기존 리스트는 숨김 */
+.detail_view_txt ul {
+  display: none;
+}
+
+.detail_txt_wrapper {
+  position: absolute;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+
+  /* 픽셀 아트 스타일 테두리 */
+  border: 4px solid #000;
+  background: #333;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 6px #000,
+    4px 4px 0 0 #000,
+    8px 8px 0 0 #666;
+
+  /* 내부 패딩 */
+  padding: 1.5rem;
+
+  /* 폰트 설정 */
+  font-family: 'LanaPixel', monospace;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000;
+}
+
+.detail_txt_wrapper p {
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* wrapper가 활성화된 상태 */
+.detail_txt_wrapper.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.detail_txt_wrapper_1 {
+  top: 10rem;
+  left: 5rem;
+  width: 20rem;
+  height: auto;
+  min-height: 8rem;
+  /* background: url(./image/bg_contact_img_1.png) no-repeat center center / cover; */
+}
+
+.detail_txt_wrapper_2 {
+  top: 10rem;
+  right: 7rem;
+  width: 20rem;
+  height: auto;
+  min-height: 8rem;
+  /* background: url(./image/bg_contact_img_2.png) no-repeat center center / cover; */
+}
+
+.detail_txt_wrapper_3 {
+  bottom: 10rem;
+  left: 5rem;
+  width: 20rem;
+  height: auto;
+  min-height: 8rem;
+  /* background: url(./image/bg_contact_img_3.png) no-repeat center center / cover; */
+}
+
+
 .detail_view_btn_wrapper {
   position: relative;
   display: flex;
@@ -2639,18 +2715,19 @@ main section {
     0 0 8px rgba(222, 184, 135, 0.4);
   will-change: transform;
   /* 애니메이션 성능 최적화 */
-  transition: transform 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.8s;
+  transition: transform 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045);
+  opacity: 1;
+  /* 항상 불투명하게 유지 */
 }
 
-/* 링 -> 리스트로 이동할 때의 투명도 변화 */
+/* 링 -> wrapper로 이동할 때 */
 .letter-clone.to-detail {
-  opacity: 0;
+  /* 투명도 변화 제거 - 항상 보이도록 */
 }
 
-/* 리스트 -> 링으로 이동할 때의 투명도 변화 */
+/* wrapper -> 링으로 이동할 때 */
 .letter-clone.to-ring {
   transition-duration: 0.6s;
-  opacity: 1 !important;
 }
 
 .contact_wrapper .detail_view_btn {
@@ -3348,46 +3425,33 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
-/* 검색 결과 메시지 */
+/* 검색 결과 메시지 - 픽셀 아트 스타일 */
 .search-result-message {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #43383A;
-  background: rgba(20, 20, 20, 0.95);
-  padding: 2rem;
+  color: #fff;
+  background: #333;
+  padding: 1.5rem 2rem;
   border-radius: 0;
-  /* 픽셀 아트 스타일을 위해 둥근 모서리 제거 */
-  border: 3px solid #fff;
+  /* 픽셀 아트 스타일: 계단식 테두리 효과 */
+  border: 4px solid #000;
   z-index: 9999;
   font-family: 'LanaPixel', monospace;
+  /* 픽셀 아트 스타일 박스 섀도우 */
   box-shadow:
-    0 0 20px rgba(255, 0, 0, 0.3),
-    inset 0 0 20px rgba(0, 255, 255, 0.1);
-  animation: searchErrorGlitch 0.6s ease-out forwards, searchErrorPulse 2s infinite;
+    0 0 0 2px #fff,
+    0 0 0 4px #000,
+    4px 4px 0 0 #000,
+    8px 8px 0 0 #666;
+  animation: pixelErrorAppear 0.4s ease-out forwards, pixelErrorBlink 1.5s infinite;
   overflow: hidden;
 }
 
-/* 글리치 배경 효과 */
+/* 도트 패턴 배경 효과 */
 .search-result-message::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-      transparent,
-      rgba(255, 0, 0, 0.1),
-      rgba(0, 255, 255, 0.1),
-      transparent);
-  animation: searchGlitchScan 1.5s infinite;
-}
-
-/* 픽셀 노이즈 효과 */
-.search-result-message::after {
   content: '';
   position: absolute;
   top: 0;
@@ -3395,168 +3459,124 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   width: 100%;
   height: 100%;
   background-image:
-    repeating-linear-gradient(0deg,
-      transparent,
-      transparent 2px,
-      rgba(255, 255, 255, 0.03) 2px,
-      rgba(255, 255, 255, 0.03) 4px),
-    repeating-linear-gradient(90deg,
-      transparent,
-      transparent 2px,
-      rgba(255, 255, 255, 0.03) 2px,
-      rgba(255, 255, 255, 0.03) 4px);
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  animation: pixelDotMove 2s linear infinite;
   pointer-events: none;
-  animation: pixelNoise 0.1s infinite;
+}
+
+/* 픽셀 프레임 효과 */
+.search-result-message::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border: 2px solid #666;
+  background:
+    linear-gradient(45deg,
+      rgba(255, 255, 255, 0.1) 25%,
+      transparent 25%,
+      transparent 75%,
+      rgba(255, 255, 255, 0.1) 75%);
+  background-size: 4px 4px;
+  pointer-events: none;
 }
 
 .search-result-message p {
   margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #ff6b6b;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
   text-shadow:
     2px 2px 0 #000,
     -1px -1px 0 #000,
     1px -1px 0 #000,
     -1px 1px 0 #000;
-  animation: textGlitch 0.3s ease-out;
+  animation: pixelTextAppear 0.3s ease-out;
   position: relative;
   z-index: 1;
 }
 
 .search-result-message small {
-  color: #4ecdc4;
-  font-size: 0.9rem;
-  font-weight: bold;
+  color: #ccc;
+  font-size: 1.2rem;
+  font-weight: 700;
   text-shadow:
     1px 1px 0 #000,
     -1px -1px 0 #000;
-  animation: textGlitchDelay 0.3s ease-out 0.1s both;
+  animation: pixelTextAppear 0.3s ease-out 0.1s both;
   position: relative;
   z-index: 1;
   display: block;
   margin-top: 0.5rem;
 }
 
-/* 메인 글리치 진입 애니메이션 */
-@keyframes searchErrorGlitch {
+/* 픽셀 아트 스타일 애니메이션 */
+
+/* 픽셀 에러 메시지 등장 애니메이션 */
+@keyframes pixelErrorAppear {
   0% {
-    transform: translate(-50%, -50%) scale(0.8);
+    transform: translate(-50%, -50%) scale(0);
     opacity: 0;
-    filter: hue-rotate(0deg);
   }
 
-  20% {
-    transform: translate(-52%, -48%) scale(1.1);
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
     opacity: 0.8;
-    filter: hue-rotate(90deg);
-  }
-
-  40% {
-    transform: translate(-48%, -52%) scale(0.95);
-    opacity: 1;
-    filter: hue-rotate(180deg);
-  }
-
-  60% {
-    transform: translate(-52%, -50%) scale(1.05);
-    filter: hue-rotate(270deg);
-  }
-
-  80% {
-    transform: translate(-50%, -48%) scale(0.98);
-    filter: hue-rotate(360deg);
   }
 
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
-    filter: hue-rotate(0deg);
   }
 }
 
-/* 지속적인 펄스 효과 */
-@keyframes searchErrorPulse {
+/* 픽셀 아트 스타일 깜빡임 효과 */
+@keyframes pixelErrorBlink {
 
   0%,
-  100% {
+  90% {
     box-shadow:
-      0 0 20px rgba(255, 0, 0, 0.3),
-      inset 0 0 20px rgba(0, 255, 255, 0.1);
-    border-color: #fff;
+      0 0 0 2px #fff,
+      0 0 0 4px #000,
+      4px 4px 0 0 #000,
+      8px 8px 0 0 #666;
   }
 
-  50% {
+  95% {
     box-shadow:
-      0 0 30px rgba(255, 0, 0, 0.6),
-      inset 0 0 30px rgba(0, 255, 255, 0.2),
-      0 0 40px rgba(255, 255, 255, 0.2);
-    border-color: #ff6b6b;
+      0 0 0 2px #ccc,
+      0 0 0 4px #000,
+      4px 4px 0 0 #000,
+      8px 8px 0 0 #666;
   }
 }
 
-/* 스캔라인 효과 */
-@keyframes searchGlitchScan {
+/* 도트 패턴 이동 효과 */
+@keyframes pixelDotMove {
   0% {
-    left: -100%;
+    background-position: 0 0, 4px 4px;
+  }
+
+  100% {
+    background-position: 8px 8px, 12px 12px;
+  }
+}
+
+/* 픽셀 텍스트 등장 애니메이션 */
+@keyframes pixelTextAppear {
+  0% {
+    transform: translateY(4px);
     opacity: 0;
   }
 
   50% {
-    opacity: 1;
-  }
-
-  100% {
-    left: 100%;
-    opacity: 0;
-  }
-}
-
-/* 픽셀 노이즈 애니메이션 */
-@keyframes pixelNoise {
-
-  0%,
-  100% {
-    opacity: 0.1;
-  }
-
-  50% {
-    opacity: 0.2;
-  }
-}
-
-/* 텍스트 글리치 효과 */
-@keyframes textGlitch {
-  0% {
-    transform: translateX(0);
-    opacity: 0;
-  }
-
-  10% {
-    transform: translateX(-3px);
-    opacity: 0.7;
-  }
-
-  20% {
-    transform: translateX(2px);
-    opacity: 0.9;
-  }
-
-  30% {
-    transform: translateX(-1px);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes textGlitchDelay {
-  0% {
-    transform: translateY(10px);
-    opacity: 0;
+    transform: translateY(-2px);
+    opacity: 0.8;
   }
 
   100% {
@@ -3565,56 +3585,55 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   }
 }
 
-/* 호버 효과 */
+/* 픽셀 아트 스타일 호버 효과 */
 .search-result-message:hover {
-  animation: searchErrorShake 0.5s ease-in-out;
+  animation: pixelErrorHover 0.3s ease-in-out;
 }
 
-@keyframes searchErrorShake {
+@keyframes pixelErrorHover {
 
   0%,
   100% {
     transform: translate(-50%, -50%);
   }
 
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translate(-52%, -50%);
-  }
-
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translate(-48%, -50%);
-  }
-}
-
-/* 메시지 제거 애니메이션 */
-.search-result-message.removing {
-  /* animation: searchErrorRemove 0.3s ease-in forwards; */
-}
-
-@keyframes searchErrorRemove {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-    filter: hue-rotate(0deg);
+  25% {
+    transform: translate(-52px, -50%);
   }
 
   50% {
+    transform: translate(-50%, -52px);
+  }
+
+  75% {
+    transform: translate(-48px, -50%);
+  }
+}
+
+/* 픽셀 아트 스타일 제거 애니메이션 */
+.search-result-message.removing {
+  animation: pixelErrorRemove 0.4s ease-in forwards;
+}
+
+@keyframes pixelErrorRemove {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  25% {
     transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.5;
-    filter: hue-rotate(180deg) blur(2px);
   }
 
   100% {
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
-    filter: hue-rotate(360deg) blur(5px);
   }
 }
 

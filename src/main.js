@@ -1131,6 +1131,7 @@
     const detailViewContainer = wrapper.querySelector('.detail_view_txt');
     const detailViewList = detailViewContainer.querySelector('ul');
     const detailViewBtn = detailViewContainer.querySelector('.detail_view_btn');
+    let detailTextWrappers = []; // 각 wrapper의 p 태그들을 저장할 배열
 
     const opt = {
       baseRadius: 100,
@@ -1184,26 +1185,36 @@
 
     // 각 링에 대해 텍스트를 span으로 분할하고 설정 적용
     detailViewList.innerHTML = ''; // 리스트 초기화
+
     rings.forEach((ring, ringIndex) => {
       const text = ring.getAttribute('data-text');
       const config = ringConfigs[ringIndex];
       const letters = text.split('');
 
-      // A. 디테일 뷰 리스트(li) 생성
-      const li = document.createElement('li');
-      letters.forEach(char => {
-        const span = document.createElement('span');
-        span.textContent = char === ' ' ? '\u00A0' : char; // 공백문자 처리
-        li.appendChild(span);
-      });
-      detailViewList.appendChild(li);
+      // A. 각 detail_txt_wrapper의 p 태그에 텍스트 span 생성
+      const wrapperSelector = `.detail_txt_wrapper_${ringIndex + 1} p`;
+      const targetWrapper = wrapper.querySelector(wrapperSelector);
+
+      if (targetWrapper) {
+        targetWrapper.innerHTML = ''; // 기존 내용 제거
+        letters.forEach(char => {
+          const span = document.createElement('span');
+          span.textContent = char === ' ' ? '\u00A0' : char; // 공백문자 처리
+          span.style.display = 'inline-block';
+          span.style.opacity = '0'; // 초기에는 숨김
+          targetWrapper.appendChild(span);
+        });
+        detailTextWrappers.push(targetWrapper);
+      }
 
       // B. 링 글자(span) 생성
       ring.innerHTML = '';
+      ring.setAttribute('data-ring-index', ringIndex); // 링 인덱스 설정
       letters.forEach((letterChar) => {
         const span = document.createElement('span');
         span.innerHTML = letterChar;
         span.classList.add('preparing');
+        span.setAttribute('data-ring-index', ringIndex); // 각 글자에도 링 인덱스 설정
         ring.appendChild(span);
         allRingLetters.push(span); // 배열에 추가
       });
@@ -1311,11 +1322,16 @@
     // 자세히 보기 상태에서의 퇴장 애니메이션 (글자들이 아래로 떨어짐)
     const startDetailViewExitAnimation = (callback) => {
       isAnimating = true;
-      const detailSpans = detailViewList.querySelectorAll('li span');
-      const spanArray = Array.from(detailSpans);
+      let allSpans = [];
+
+      // 모든 wrapper에서 span들을 수집
+      detailTextWrappers.forEach(wrapperP => {
+        const spans = Array.from(wrapperP.querySelectorAll('span'));
+        allSpans = allSpans.concat(spans);
+      });
 
       // 글자들을 아래로 떨어뜨리는 애니메이션
-      spanArray.forEach((span, index) => {
+      allSpans.forEach((span, index) => {
         setTimeout(() => {
           const rect = span.getBoundingClientRect();
           span.style.setProperty('--start-x', `${rect.left}px`);
@@ -1328,7 +1344,7 @@
       // 모든 애니메이션이 끝난 후 콜백 실행
       setTimeout(() => {
         if (callback) callback();
-      }, spanArray.length * 20 + 800);
+      }, allSpans.length * 20 + 800);
     };
 
     const startMainAnimation = () => {
@@ -1386,63 +1402,178 @@
       if (isAnimating) return;
       isAnimating = true;
 
-      const sourceElements = toDetail ? allRingLetters : Array.from(detailViewList.querySelectorAll('li span'));
-      const targetElements = toDetail ? Array.from(detailViewList.querySelectorAll('li span')) : allRingLetters;
-
-      if (!toDetail) { // 리스트 -> 링으로 돌아갈 때
-        ringsContainer.style.opacity = '1';
-        detailViewContainer.classList.remove('visible');
+      if (!toDetail) { // wrapper -> 링으로 돌아갈 때
+        // 링은 아직 숨겨둔 상태로 유지 (글자들이 모두 돌아온 후에 보이도록)
+        // wrapper들 숨기기
+        detailTextWrappers.forEach(wrapperP => {
+          wrapperP.parentElement.classList.remove('visible');
+        });
       }
 
-      // 1. 목표 위치 계산
-      const targetPositions = targetElements.map(el => el.getBoundingClientRect());
+      // 애니메이션 완료 카운터
+      let totalAnimations = 0;
+      let completedAnimations = 0;
 
-      sourceElements.forEach((sourceEl, index) => {
-        const startPos = sourceEl.getBoundingClientRect();
-        const targetPos = targetPositions[index];
+      // 전체 애니메이션 수 계산
+      rings.forEach((ring, ringIndex) => {
+        const ringLetters = Array.from(ring.querySelectorAll('span'));
+        const wrapperSpans = detailTextWrappers[ringIndex] ? Array.from(detailTextWrappers[ringIndex].querySelectorAll('span')) : [];
 
-        // 2. 글자 복제본 생성
-        const clone = document.createElement('span');
-        clone.textContent = sourceEl.textContent;
-        clone.className = 'letter-clone';
-        clone.style.fontSize = window.getComputedStyle(sourceEl).fontSize;
+        if (ringLetters.length > 0 && wrapperSpans.length > 0) {
+          const sourceElements = toDetail ? ringLetters : wrapperSpans;
+          totalAnimations += sourceElements.length;
+        }
+      });
 
-        // 3. 복제본을 시작 위치에 배치
-        clone.style.transform = `translate(${startPos.left}px, ${startPos.top}px)`;
-        clone.style.left = '0px';
-        clone.style.top = '0px';
+      // 애니메이션할 글자가 없는 경우 예외 처리
+      if (totalAnimations === 0) {
+        isAnimating = false;
+        if (!toDetail) {
+          ringsContainer.style.opacity = '1';
+          startMainAnimation();
+        }
+        return;
+      }
 
-        document.body.appendChild(clone);
+      // 각 링별로 처리
+      rings.forEach((ring, ringIndex) => {
+        const ringLetters = Array.from(ring.querySelectorAll('span'));
+        const wrapperSpans = detailTextWrappers[ringIndex] ? Array.from(detailTextWrappers[ringIndex].querySelectorAll('span')) : [];
 
-        // 원본 숨기기
-        sourceEl.style.opacity = 0;
+        if (ringLetters.length === 0 || wrapperSpans.length === 0) return;
 
-        // 4. 복제본을 목표 위치로 애니메이션
-        requestAnimationFrame(() => {
-          clone.classList.add(toDetail ? 'to-detail' : 'to-ring');
-          clone.style.transform = `translate(${targetPos.left}px, ${targetPos.top}px)`;
-        });
+        const sourceElements = toDetail ? ringLetters : wrapperSpans;
+        const targetElements = toDetail ? wrapperSpans : ringLetters;
 
-        // 5. 애니메이션 후 정리
-        clone.addEventListener('transitionend', () => {
-          clone.remove();
-          targetElements[index].style.opacity = 1;
-          if (index === sourceElements.length - 1) {
-            isAnimating = false;
-            if (!toDetail) { // 링으로 돌아왔을 때만 메인 애니메이션 다시 시작
-              startMainAnimation();
-            }
+        sourceElements.forEach((sourceEl, letterIndex) => {
+          const targetEl = targetElements[letterIndex];
+          if (!targetEl) return;
+
+          const startPos = sourceEl.getBoundingClientRect();
+
+          // 글자 복제본 생성
+          const clone = document.createElement('span');
+          clone.textContent = sourceEl.textContent;
+          clone.className = 'letter-clone';
+          clone.style.fontSize = window.getComputedStyle(sourceEl).fontSize;
+          clone.style.color = window.getComputedStyle(sourceEl).color;
+
+          // 복제본을 시작 위치에 배치
+          clone.style.transform = `translate(${startPos.left}px, ${startPos.top}px)`;
+          clone.style.left = '0px';
+          clone.style.top = '0px';
+          clone.style.opacity = '1'; // 명시적으로 불투명 설정
+
+          document.body.appendChild(clone);
+
+          // 원본 숨기기
+          sourceEl.style.opacity = 0;
+
+          if (toDetail) {
+            // wrapper로 갈 때는 기존 방식 (정적 위치)
+            const targetPos = targetEl.getBoundingClientRect();
+            requestAnimationFrame(() => {
+              clone.classList.add('to-detail');
+              clone.style.transform = `translate(${targetPos.left}px, ${targetPos.top}px)`;
+            });
+
+            // 애니메이션 후 정리
+            clone.addEventListener('transitionend', () => {
+              clone.remove();
+              targetEl.style.opacity = 1;
+
+              completedAnimations++;
+
+              // 모든 애니메이션이 완료되었을 때
+              if (completedAnimations >= totalAnimations) {
+                isAnimating = false;
+              }
+            }, {
+              once: true
+            });
+          } else {
+            // 링으로 돌아갈 때는 실시간 위치 계산
+            const config = ringConfigs[ringIndex];
+            let animationStartTime = null;
+            let currentX = x; // 현재 x 값 저장
+            let currentTime = time; // 현재 시간 저장
+
+            const updateClonePosition = (timestamp) => {
+              if (!animationStartTime) animationStartTime = timestamp;
+              const progress = Math.min((timestamp - animationStartTime) / 600, 1); // 0.6초 애니메이션
+
+              // 실시간 위치 계산 (메인 애니메이션과 동일한 로직)
+              currentX = lerp(currentX, mouseX / window.innerWidth, 0.1);
+              const rotation = -opt.maxRotation + currentX * opt.maxRotation * 2;
+              const baseSpeed = -opt.maxSpeed + currentX * opt.maxSpeed * 2;
+              const modY = 1 + currentX * -2;
+
+              // 마우스 위치에 따른 반지름 계산
+              const centerX = window.innerWidth / 2;
+              const distanceFromCenter = Math.abs(mouseX - centerX);
+              const maxDistance = centerX;
+              const currentRadius = scale(distanceFromCenter, 0, maxDistance, opt.minRadius, opt.maxRadius) * (config.baseRadius / opt.baseRadius);
+
+              // 시간 업데이트
+              const finalSpeed = Math.max(Math.abs(baseSpeed * config.speedMultiplier), config.minSpeed) * Math.sign(baseSpeed || -1);
+              currentTime -= finalSpeed;
+
+              const theta = letterIndex / sourceElements.length;
+              const ringTime = currentTime + ringIndex * Math.PI * 0.5; // 링마다 위상차
+              const targetXPos = currentRadius * Math.sin(ringTime + theta * Math.PI * 2);
+              const targetYPos = currentRadius * opt.radiusY * Math.cos(modY + ringTime + theta * Math.PI * 2);
+
+              // 링의 중심점 계산
+              const ringRect = ringsContainer.getBoundingClientRect();
+              const ringCenterX = ringRect.left + ringRect.width / 2;
+              const ringCenterY = ringRect.top + ringRect.height / 2;
+
+              const finalTargetX = ringCenterX + targetXPos;
+              const finalTargetY = ringCenterY + targetYPos;
+
+              // 시작점에서 목표점까지 부드러운 곡선 보간 (easeInOutCubic)
+              const easeProgress = progress < 0.5 ?
+                4 * progress * progress * progress :
+                1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+              const currentCloneX = startPos.left + (finalTargetX - startPos.left) * easeProgress;
+              const currentCloneY = startPos.top + (finalTargetY - startPos.top) * easeProgress;
+
+              clone.style.transform = `translate(${currentCloneX}px, ${currentCloneY}px)`;
+
+              if (progress < 1) {
+                requestAnimationFrame(updateClonePosition);
+              } else {
+                // 애니메이션 완료
+                clone.remove();
+                targetEl.style.opacity = 1;
+
+                completedAnimations++;
+
+                // 모든 애니메이션이 완료되었을 때
+                if (completedAnimations >= totalAnimations) {
+                  isAnimating = false;
+                  // 모든 글자가 돌아온 후에 링을 보이게 하고 메인 애니메이션 시작
+                  setTimeout(() => {
+                    ringsContainer.style.opacity = '1';
+                    startMainAnimation();
+                  }, 100);
+                }
+              }
+            };
+
+            requestAnimationFrame(updateClonePosition);
           }
-        }, {
-          once: true
         });
       });
 
-      if (toDetail) { // 링 -> 리스트로 갈 때
+      if (toDetail) { // 링 -> wrapper로 갈 때
         ringsContainer.style.opacity = '0';
-        detailViewContainer.classList.add('visible');
-        detailViewContainer.querySelectorAll('li').forEach((li, i) => {
-          li.style.transitionDelay = `${i * 0.1}s`;
+        // wrapper들 보이기
+        detailTextWrappers.forEach((wrapperP, index) => {
+          setTimeout(() => {
+            wrapperP.parentElement.classList.add('visible');
+          }, index * 100); // 순차적으로 나타나게
         });
       }
     };
@@ -1490,6 +1621,12 @@
       wrapper.removeEventListener('mousemove', handleMouse);
       wrapper.removeEventListener('touchstart', handleMouse);
       wrapper.removeEventListener('touchmove', handleMouse);
+
+      // wrapper들 숨기기 및 정리
+      detailTextWrappers.forEach(wrapperP => {
+        wrapperP.parentElement.classList.remove('visible');
+        wrapperP.innerHTML = ''; // 내용 정리
+      });
     };
 
     // 퇴장 애니메이션 함수들과 상태를 wrapper에 저장
