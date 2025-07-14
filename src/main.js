@@ -2642,6 +2642,8 @@
       card.dataset.index = index;
       card.target = '_blank';
       card.style.backgroundImage = `url(./src/image/${item.img}.jpg)`;
+      // 첫 번째 카드(인덱스 0)만 포커스 가능하도록 초기 설정
+      card.tabIndex = index === 0 ? 0 : -1;
       thumbnailContainer.insertBefore(card, thumbnailContainer.firstChild);
     });
 
@@ -2661,7 +2663,6 @@
       if (!['ArrowUp', 'ArrowDown'].includes(e.key)) return;
       e.preventDefault();
 
-      const oldIndex = currentPortfolioItemIndex; // 이전 인덱스 저장
       let newIndex = currentPortfolioItemIndex;
       const total = portfolioItems.length;
 
@@ -2676,9 +2677,7 @@
         items[currentPortfolioItemIndex].tabIndex = -1;
         items[newIndex].tabIndex = 0;
         items[newIndex].focus();
-
-        // 키보드 네비게이션에서 카드 애니메이션을 위해 oldIndex를 명시적으로 전달
-        updatePortfolioSelectionWithOldIndex(newIndex, oldIndex, true);
+        updatePortfolioSelection(newIndex);
       }
     });
 
@@ -2896,35 +2895,6 @@
   }
 
   /**
-   * 포트폴리오 선택 아이템 업데이트 (키보드 네비게이션 전용, oldIndex 명시적 전달)
-   */
-  function updatePortfolioSelectionWithOldIndex(newIndex, oldIndex, focusLi = true) {
-    if (newIndex === oldIndex && newIndex !== 0) return;
-
-    currentPortfolioItemIndex = newIndex;
-    const allLiElements = portfolioContentList.querySelectorAll('li');
-
-    // 컨트롤러(li) 활성 상태 업데이트
-    allLiElements.forEach((li, index) => {
-      li.classList.toggle('active', index === newIndex);
-    });
-
-    if (focusLi) {
-      allLiElements[newIndex]?.focus();
-    }
-
-    const selectedItem = portfolioData[0][newIndex];
-    if (selectedItem) {
-      updateContributionBar(selectedItem.contribution);
-      // 사용 스킬 목록 업데이트
-      updateUseSkillList(selectedItem.useSkill);
-    }
-
-    // 카드 애니메이션 업데이트 (명시적으로 전달받은 oldIndex 사용)
-    updateCardAnimation(newIndex, oldIndex);
-  }
-
-  /**
    * 카드 스택 애니메이션을 제어하는 함수
    */
   function updateCardAnimation(currentIndex, previousIndex) {
@@ -2934,32 +2904,24 @@
     const cards = thumbnailContainer.querySelectorAll('.p-card');
     const totalCards = cards.length;
 
-    // 디버깅용 로그 (개발 중에만 사용)
-    console.log('updateCardAnimation called:', {
-      currentIndex,
-      previousIndex,
-      totalCards
-    });
-
     // 다음 카드의 인덱스 계산
     const nextIndex = (currentIndex + 1) % totalCards;
 
-    // 모든 카드의 상태 클래스 초기화
-    cards.forEach(card => card.classList.remove('card--current', 'card--next', 'card--out'));
+    // 모든 카드의 상태 클래스 초기화 및 tabindex 설정
+    cards.forEach((card, index) => {
+      card.classList.remove('card--current', 'card--next', 'card--out');
 
-    // 이전 카드에 퇴장 애니메이션 클래스 추가 (키보드 네비게이션 개선)
-    if (previousIndex !== undefined && previousIndex !== currentIndex && cards[previousIndex]) {
-      // 브라우저가 DOM 변경을 인식하도록 약간의 지연 추가
-      requestAnimationFrame(() => {
-        cards[previousIndex].classList.add('card--out');
+      // 현재 활성화된 카드(card--current)에만 포커스 가능하도록 설정
+      if (index === currentIndex) {
+        card.tabIndex = 0; // 포커스 가능
+      } else {
+        card.tabIndex = -1; // 포커스 불가능
+      }
+    });
 
-        // 애니메이션 완료 후 클래스 정리 (0.7초 후)
-        setTimeout(() => {
-          if (cards[previousIndex]) {
-            cards[previousIndex].classList.remove('card--out');
-          }
-        }, 700);
-      });
+    // 이전 카드에 퇴장 애니메이션 클래스 추가
+    if (previousIndex !== undefined && cards[previousIndex]) {
+      cards[previousIndex].classList.add('card--out');
     }
 
     // 현재 카드와 다음 카드에 상태 클래스 추가
