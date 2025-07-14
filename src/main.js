@@ -272,6 +272,10 @@
     const contactWrapper = mainElement.querySelector('.contact_wrapper');
 
     if (isContactActive && contactWrapper) {
+      // 애니메이션이 진행 중이면 뒤로가기 무시
+      const isContactAnimating = contactWrapper._getAnimatingState && contactWrapper._getAnimatingState();
+      if (isContactAnimating) return;
+
       // 자세히 보기 상태인지 확인
       const isDetailView = contactWrapper._getDetailViewState && contactWrapper._getDetailViewState();
 
@@ -319,6 +323,9 @@
           sectionWrapper._contactCleanup();
           delete sectionWrapper._contactCleanup;
           delete sectionWrapper._contactExitAnimation;
+          delete sectionWrapper._contactDetailExitAnimation;
+          delete sectionWrapper._getDetailViewState;
+          delete sectionWrapper._getAnimatingState;
         }
         // [추가] Blog 섹션 정리
         if (className === 'blog') {
@@ -464,9 +471,29 @@
       e.stopPropagation();
       handleGoBack();
     };
+
+    const handleBackKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        // contact 섹션인 경우 애니메이션 상태 확인
+        if (mainElement.classList.contains('contact')) {
+          const contactWrapper = mainElement.querySelector('.contact_wrapper');
+          const isContactAnimating = contactWrapper && contactWrapper._getAnimatingState && contactWrapper._getAnimatingState();
+          if (isContactAnimating) {
+            e.preventDefault(); // 애니메이션 중이면 키보드 입력 무시
+            return;
+          }
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        handleGoBack();
+      }
+    };
+
     backBtn.addEventListener('click', handleBackClick);
     backBtn.addEventListener('pointerdown', handleBackClick);
     backBtn.addEventListener('touchstart', handleBackClick);
+    backBtn.addEventListener('keydown', handleBackKeyDown);
   });
 
   // 10. 전역 키보드 이벤트: ESC 키로 뒤로가기
@@ -474,6 +501,13 @@
     if (e.key === 'Escape') {
       const isAnySectionActive = SECTION_CLASSES.some(className => mainElement.classList.contains(className));
       if (isAnySectionActive) {
+        // contact 섹션인 경우 애니메이션 상태 확인
+        if (mainElement.classList.contains('contact')) {
+          const contactWrapper = mainElement.querySelector('.contact_wrapper');
+          const isContactAnimating = contactWrapper && contactWrapper._getAnimatingState && contactWrapper._getAnimatingState();
+          if (isContactAnimating) return; // 애니메이션 중이면 ESC 키 무시
+        }
+
         e.preventDefault();
         handleGoBack();
       }
@@ -1129,9 +1163,7 @@
     // DOM 요소 캐싱
     const ringsContainer = wrapper.querySelector('.contact_space_container');
     const detailViewContainer = wrapper.querySelector('.detail_view_txt');
-    const detailViewList = detailViewContainer.querySelector('ul');
-    const detailViewBtn = detailViewContainer.querySelector('.detail_view_btn');
-    let detailTextWrappers = []; // 각 wrapper의 p 태그들을 저장할 배열
+    const detailViewBtn = detailViewContainer ? detailViewContainer.querySelector('.detail_view_btn') : null;
 
     const opt = {
       baseRadius: 100,
@@ -1183,9 +1215,6 @@
 
     const rings = wrapper.querySelectorAll('.contact_ring');
 
-    // 각 링에 대해 텍스트를 span으로 분할하고 설정 적용
-    detailViewList.innerHTML = ''; // 리스트 초기화
-
     rings.forEach((ring, ringIndex) => {
       const text = ring.getAttribute('data-text');
       const config = ringConfigs[ringIndex];
@@ -1204,7 +1233,6 @@
           span.style.opacity = '0'; // 초기에는 숨김
           targetWrapper.appendChild(span);
         });
-        detailTextWrappers.push(targetWrapper);
       }
 
       // B. 링 글자(span) 생성
@@ -1281,7 +1309,7 @@
               startMainAnimation();
             }
           }, 800); // spanEnter 애니메이션 지속 시간(800ms)과 동일
-        }, globalIndex * 50); // 50ms씩 지연
+        }, globalIndex * 30); // 50ms씩 지연
       });
     };
 
@@ -1310,7 +1338,7 @@
           span.style.setProperty('--start-y', `${startY}px`);
 
           span.classList.add('exiting');
-        }, index * 30); // 30ms씩 지연으로 빠르게 떨어짐
+        }, index * 20); // 30ms씩 지연으로 빠르게 떨어짐
       });
 
       // 모든 애니메이션이 끝난 후 콜백 실행
@@ -1324,27 +1352,31 @@
       isAnimating = true;
       let allSpans = [];
 
-      // 모든 wrapper에서 span들을 수집
-      detailTextWrappers.forEach(wrapperP => {
-        const spans = Array.from(wrapperP.querySelectorAll('span'));
-        allSpans = allSpans.concat(spans);
+      // visible 상태인 wrapper들에서 p > span 수집
+      wrapper.querySelectorAll('.detail_txt_wrapper.visible p span').forEach(span => {
+        allSpans.push(span);
       });
 
-      // 글자들을 아래로 떨어뜨리는 애니메이션
+      // detail_txt_wrapper 직속 span들도 수집
+      wrapper.querySelectorAll('.detail_txt_wrapper.visible > span').forEach(span => {
+        allSpans.push(span);
+      });
+
+      // 각 span에 순차적으로 퇴장 애니메이션 클래스 추가 (10ms 간격)
       allSpans.forEach((span, index) => {
         setTimeout(() => {
-          const rect = span.getBoundingClientRect();
-          span.style.setProperty('--start-x', `${rect.left}px`);
-          span.style.setProperty('--start-y', `${rect.top}px`);
-
           span.classList.add('detail-exiting');
-        }, index * 20); // 20ms씩 지연으로 순차적으로 떨어짐
+        }, index * 10); // 10ms씩 지연으로 순차적으로 떨어짐
       });
 
       // 모든 애니메이션이 끝난 후 콜백 실행
       setTimeout(() => {
+        // 애니메이션 완료 후 클래스 정리
+        allSpans.forEach(span => {
+          span.classList.remove('detail-exiting');
+        });
         if (callback) callback();
-      }, allSpans.length * 20 + 800);
+      }, allSpans.length * 10 + 800);
     };
 
     const startMainAnimation = () => {
@@ -1402,11 +1434,19 @@
       if (isAnimating) return;
       isAnimating = true;
 
+      // 링 애니메이션 중지 (자세히 보기로 갈 때)
+      if (toDetail) {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+      }
+
       if (!toDetail) { // wrapper -> 링으로 돌아갈 때
         // 링은 아직 숨겨둔 상태로 유지 (글자들이 모두 돌아온 후에 보이도록)
-        // wrapper들 숨기기
-        detailTextWrappers.forEach(wrapperP => {
-          wrapperP.parentElement.classList.remove('visible');
+        // wrapper들 숨기기 (새로운 구조에 맞춤)
+        wrapper.querySelectorAll('.detail_txt_wrapper').forEach(detailWrapper => {
+          detailWrapper.classList.remove('visible');
         });
       }
 
@@ -1417,7 +1457,9 @@
       // 전체 애니메이션 수 계산
       rings.forEach((ring, ringIndex) => {
         const ringLetters = Array.from(ring.querySelectorAll('span'));
-        const wrapperSpans = detailTextWrappers[ringIndex] ? Array.from(detailTextWrappers[ringIndex].querySelectorAll('span')) : [];
+        // 새로운 구조에 맞춰 직접 셀렉터 사용
+        const wrapperP = wrapper.querySelector(`.detail_txt_wrapper_${ringIndex + 1} p`);
+        const wrapperSpans = wrapperP ? Array.from(wrapperP.querySelectorAll('span')) : [];
 
         if (ringLetters.length > 0 && wrapperSpans.length > 0) {
           const sourceElements = toDetail ? ringLetters : wrapperSpans;
@@ -1438,7 +1480,9 @@
       // 각 링별로 처리
       rings.forEach((ring, ringIndex) => {
         const ringLetters = Array.from(ring.querySelectorAll('span'));
-        const wrapperSpans = detailTextWrappers[ringIndex] ? Array.from(detailTextWrappers[ringIndex].querySelectorAll('span')) : [];
+        // 새로운 구조에 맞춰 직접 셀렉터 사용
+        const wrapperP = wrapper.querySelector(`.detail_txt_wrapper_${ringIndex + 1} p`);
+        const wrapperSpans = wrapperP ? Array.from(wrapperP.querySelectorAll('span')) : [];
 
         if (ringLetters.length === 0 || wrapperSpans.length === 0) return;
 
@@ -1450,6 +1494,7 @@
           if (!targetEl) return;
 
           const startPos = sourceEl.getBoundingClientRect();
+          const targetPos = targetEl.getBoundingClientRect();
 
           // 글자 복제본 생성
           const clone = document.createElement('span');
@@ -1469,117 +1514,61 @@
           // 원본 숨기기
           sourceEl.style.opacity = 0;
 
-          if (toDetail) {
-            // wrapper로 갈 때는 기존 방식 (정적 위치)
-            const targetPos = targetEl.getBoundingClientRect();
-            requestAnimationFrame(() => {
-              clone.classList.add('to-detail');
-              clone.style.transform = `translate(${targetPos.left}px, ${targetPos.top}px)`;
-            });
+          // 복제본을 목표 위치로 애니메이션
+          requestAnimationFrame(() => {
+            clone.classList.add(toDetail ? 'to-detail' : 'to-ring');
+            clone.style.transform = `translate(${targetPos.left}px, ${targetPos.top}px)`;
+          });
 
-            // 애니메이션 후 정리
-            clone.addEventListener('transitionend', () => {
-              clone.remove();
-              targetEl.style.opacity = 1;
+          // 애니메이션 후 정리
+          clone.addEventListener('transitionend', () => {
+            clone.remove();
+            targetEl.style.opacity = 1;
 
-              completedAnimations++;
+            completedAnimations++;
 
-              // 모든 애니메이션이 완료되었을 때
-              if (completedAnimations >= totalAnimations) {
-                isAnimating = false;
+            // 모든 애니메이션이 완료되었을 때
+            if (completedAnimations >= totalAnimations) {
+              isAnimating = false;
+              if (!toDetail) { // 링으로 돌아왔을 때만 메인 애니메이션 다시 시작
+                // 모든 글자가 돌아온 후에 링을 보이게 하고 메인 애니메이션 시작
+                setTimeout(() => {
+                  ringsContainer.style.opacity = '1';
+                  startMainAnimation();
+                }, 150); // 약간의 지연을 주어 자연스럽게
               }
-            }, {
-              once: true
-            });
-          } else {
-            // 링으로 돌아갈 때는 실시간 위치 계산
-            const config = ringConfigs[ringIndex];
-            let animationStartTime = null;
-            let currentX = x; // 현재 x 값 저장
-            let currentTime = time; // 현재 시간 저장
-
-            const updateClonePosition = (timestamp) => {
-              if (!animationStartTime) animationStartTime = timestamp;
-              const progress = Math.min((timestamp - animationStartTime) / 600, 1); // 0.6초 애니메이션
-
-              // 실시간 위치 계산 (메인 애니메이션과 동일한 로직)
-              currentX = lerp(currentX, mouseX / window.innerWidth, 0.1);
-              const rotation = -opt.maxRotation + currentX * opt.maxRotation * 2;
-              const baseSpeed = -opt.maxSpeed + currentX * opt.maxSpeed * 2;
-              const modY = 1 + currentX * -2;
-
-              // 마우스 위치에 따른 반지름 계산
-              const centerX = window.innerWidth / 2;
-              const distanceFromCenter = Math.abs(mouseX - centerX);
-              const maxDistance = centerX;
-              const currentRadius = scale(distanceFromCenter, 0, maxDistance, opt.minRadius, opt.maxRadius) * (config.baseRadius / opt.baseRadius);
-
-              // 시간 업데이트
-              const finalSpeed = Math.max(Math.abs(baseSpeed * config.speedMultiplier), config.minSpeed) * Math.sign(baseSpeed || -1);
-              currentTime -= finalSpeed;
-
-              const theta = letterIndex / sourceElements.length;
-              const ringTime = currentTime + ringIndex * Math.PI * 0.5; // 링마다 위상차
-              const targetXPos = currentRadius * Math.sin(ringTime + theta * Math.PI * 2);
-              const targetYPos = currentRadius * opt.radiusY * Math.cos(modY + ringTime + theta * Math.PI * 2);
-
-              // 링의 중심점 계산
-              const ringRect = ringsContainer.getBoundingClientRect();
-              const ringCenterX = ringRect.left + ringRect.width / 2;
-              const ringCenterY = ringRect.top + ringRect.height / 2;
-
-              const finalTargetX = ringCenterX + targetXPos;
-              const finalTargetY = ringCenterY + targetYPos;
-
-              // 시작점에서 목표점까지 부드러운 곡선 보간 (easeInOutCubic)
-              const easeProgress = progress < 0.5 ?
-                4 * progress * progress * progress :
-                1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-              const currentCloneX = startPos.left + (finalTargetX - startPos.left) * easeProgress;
-              const currentCloneY = startPos.top + (finalTargetY - startPos.top) * easeProgress;
-
-              clone.style.transform = `translate(${currentCloneX}px, ${currentCloneY}px)`;
-
-              if (progress < 1) {
-                requestAnimationFrame(updateClonePosition);
-              } else {
-                // 애니메이션 완료
-                clone.remove();
-                targetEl.style.opacity = 1;
-
-                completedAnimations++;
-
-                // 모든 애니메이션이 완료되었을 때
-                if (completedAnimations >= totalAnimations) {
-                  isAnimating = false;
-                  // 모든 글자가 돌아온 후에 링을 보이게 하고 메인 애니메이션 시작
-                  setTimeout(() => {
-                    ringsContainer.style.opacity = '1';
-                    startMainAnimation();
-                  }, 100);
-                }
-              }
-            };
-
-            requestAnimationFrame(updateClonePosition);
-          }
+            }
+          }, {
+            once: true
+          });
         });
       });
 
       if (toDetail) { // 링 -> wrapper로 갈 때
         ringsContainer.style.opacity = '0';
-        // wrapper들 보이기
-        detailTextWrappers.forEach((wrapperP, index) => {
+        // wrapper들 보이기 (새로운 구조에 맞춤)
+        const allDetailWrappers = wrapper.querySelectorAll('.detail_txt_wrapper');
+        allDetailWrappers.forEach((detailWrapper, index) => {
           setTimeout(() => {
-            wrapperP.parentElement.classList.add('visible');
+            detailWrapper.classList.add('visible');
           }, index * 100); // 순차적으로 나타나게
         });
+      } else { // wrapper -> 링으로 갈 때
+        // wrapper들 숨기기 (새로운 구조에 맞춤)
+        const allDetailWrappers = wrapper.querySelectorAll('.detail_txt_wrapper');
+        allDetailWrappers.forEach(detailWrapper => {
+          detailWrapper.classList.remove('visible');
+        });
+        // 링은 애니메이션 완료 후에 보이게 함
+        ringsContainer.style.opacity = '0';
       }
     };
 
     // 6. [신규] 디테일 뷰 토글 핸들러
     const handleDetailViewToggle = () => {
+      // 애니메이션이 진행 중이면 버튼 클릭 무시
+      if (isAnimating) return;
+
       if (isDetailView) { // 리스트 -> 링
         animateViewChange(false);
       } else { // 링 -> 리스트
@@ -1588,7 +1577,9 @@
         animateViewChange(true);
       }
       isDetailView = !isDetailView;
-      detailViewBtn.textContent = isDetailView ? '돌아가기' : '자세히 보기';
+      if (detailViewBtn) {
+        detailViewBtn.textContent = isDetailView ? '돌아가기' : '자세히 보기';
+      }
     };
 
     const handleMouse = (e) => {
@@ -1599,11 +1590,44 @@
       }
     };
 
+    // 자세히보기 버튼 키보드 이벤트 핸들러
+    const handleDetailViewKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        // 애니메이션이 진행 중이면 키보드 입력 무시
+        if (isAnimating) {
+          e.preventDefault();
+          return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        handleDetailViewToggle();
+      }
+    };
+
     // 이벤트 리스너 등록
     wrapper.addEventListener('mousemove', handleMouse);
     wrapper.addEventListener('touchstart', handleMouse);
     wrapper.addEventListener('touchmove', handleMouse);
-    detailViewBtn.addEventListener('click', handleDetailViewToggle); // 버튼 클릭 리스너
+    if (detailViewBtn) {
+      detailViewBtn.addEventListener('click', handleDetailViewToggle); // 버튼 클릭 리스너
+      detailViewBtn.addEventListener('keydown', handleDetailViewKeyDown); // 버튼 키보드 리스너
+    }
+
+    // 초기 상태 설정 (섹션 재진입 시 항상 링 상태로 시작)
+    isDetailView = false;
+    ringsContainer.style.opacity = '1';
+    ringsContainer.style.visibility = 'visible';
+
+    // wrapper들 숨기기 (새로운 구조에 맞춤)
+    wrapper.querySelectorAll('.detail_txt_wrapper').forEach(detailWrapper => {
+      detailWrapper.classList.remove('visible');
+    });
+
+    // 버튼 텍스트 초기화
+    if (detailViewBtn) {
+      detailViewBtn.textContent = '자세히 보기';
+    }
 
     // 진입 애니메이션 시작
     setTimeout(() => {
@@ -1622,17 +1646,46 @@
       wrapper.removeEventListener('touchstart', handleMouse);
       wrapper.removeEventListener('touchmove', handleMouse);
 
-      // wrapper들 숨기기 및 정리
-      detailTextWrappers.forEach(wrapperP => {
-        wrapperP.parentElement.classList.remove('visible');
-        wrapperP.innerHTML = ''; // 내용 정리
+      // 상태 완전 초기화
+      isAnimating = false;
+      isDetailView = false;
+
+      // 링 컨테이너 상태 리셋
+      ringsContainer.style.opacity = '1';
+      ringsContainer.style.visibility = 'visible';
+
+      // wrapper들 숨기기 및 정리 (새로운 구조에 맞춤)
+      wrapper.querySelectorAll('.detail_txt_wrapper').forEach(detailWrapper => {
+        detailWrapper.classList.remove('visible');
+
+        // p 태그 내의 span들 정리
+        const wrapperP = detailWrapper.querySelector('p');
+        if (wrapperP) {
+          wrapperP.innerHTML = ''; // 내용 정리
+
+          // span들의 애니메이션 클래스 정리
+          const spans = wrapperP.querySelectorAll('span');
+          spans.forEach(span => {
+            span.classList.remove('detail-exiting');
+            span.style.position = '';
+            span.style.left = '';
+            span.style.top = '';
+            span.style.zIndex = '';
+          });
+        }
       });
+
+      // 버튼 텍스트 리셋
+      if (detailViewBtn) {
+        detailViewBtn.textContent = '자세히 보기';
+      }
     };
 
     // 퇴장 애니메이션 함수들과 상태를 wrapper에 저장
     wrapper._contactExitAnimation = startExitAnimation;
     wrapper._contactDetailExitAnimation = startDetailViewExitAnimation;
     wrapper._getDetailViewState = () => isDetailView;
+    wrapper._getAnimatingState = () => isAnimating;
   };
 
   /**
@@ -2778,10 +2831,11 @@
       card.className = 'p-card';
       card.dataset.index = index;
       card.target = '_blank';
-      card.style.backgroundImage = `url(./src/image/${item.img}.jpg)`;
+      // card.style.backgroundImage = `url(${item.img})`;
+      card.style.backgroundImage = `url(./src/image/portfolio/portfolio_img_${index+1}.png)`;
       // 첫 번째 카드(인덱스 0)만 포커스 가능하도록 초기 설정
       card.tabIndex = index === 0 ? 0 : -1;
-      thumbnailContainer.insertBefore(card, thumbnailContainer.firstChild);
+      thumbnailContainer.appendChild(card);
     });
 
     if (portfolioContentList.children.length > 0) {
@@ -3057,7 +3111,8 @@
     });
 
     // 이전 카드에 퇴장 애니메이션 클래스 추가
-    if (previousIndex !== undefined && cards[previousIndex]) {
+    // 단, 이전 카드와 현재 카드가 같지 않을 때만 (초기 로드 시 방지)
+    if (previousIndex !== undefined && previousIndex !== currentIndex && cards[previousIndex]) {
       cards[previousIndex].classList.add('card--out');
     }
 
