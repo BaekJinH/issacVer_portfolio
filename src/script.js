@@ -3,7 +3,6 @@ let scenes = [];
 
 // 2) 전역변수
 let sceneIndex = 0;
-let fullscreenActivated = false;
 let currentImageClass = null; // 현재 활성화된 이미지 클래스 추적
 const wrapperEl = document.querySelector('#wrapper');
 const narrationEl = wrapperEl.querySelector('.narrate');
@@ -87,7 +86,47 @@ function goBack() {
   }
 }
 
-// 6) 이벤트 초기화
+// 6) 전체화면 토글 기능
+const fullscreenToggleBtn = document.querySelector('.fullscreen_toggle_btn');
+const fullscreenIcon = document.querySelector('.fullscreen_icon');
+const fullscreenText = document.querySelector('.fullscreen_text');
+
+/**
+ * 전체화면 상태를 토글합니다.
+ */
+const toggleFullscreen = async () => {
+  try {
+    if (!document.fullscreenElement) {
+      // 전체화면 진입
+      await document.documentElement.requestFullscreen();
+      fullscreenIcon.textContent = '⛸'; // 축소 아이콘
+      fullscreenText.textContent = '창모드';
+    } else {
+      // 전체화면 종료
+      await document.exitFullscreen();
+      fullscreenIcon.textContent = '⛶'; // 확대 아이콘
+      fullscreenText.textContent = '전체화면';
+    }
+  } catch (error) {
+    console.log('전체화면 전환 중 오류가 발생했습니다:', error);
+  }
+};
+
+/**
+ * 전체화면 상태 변경 감지 및 UI 업데이트
+ */
+const handleFullscreenChange = () => {
+  // 토글 버튼 UI 업데이트
+  if (document.fullscreenElement) {
+    fullscreenIcon.textContent = '⛸';
+    fullscreenText.textContent = '창모드';
+  } else {
+    fullscreenIcon.textContent = '⛶';
+    fullscreenText.textContent = '전체화면';
+  }
+};
+
+// 7) 이벤트 초기화
 window.addEventListener('DOMContentLoaded', async () => {
   // 먼저 씬 데이터 로드
   await loadScenes();
@@ -95,17 +134,35 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 첫 번째 씬 렌더링
   renderScene(sceneIndex);
 
-  // 클릭으로 전체화면 or 씬 진행
-  document.addEventListener('click', (e) => {
-    if (!fullscreenActivated) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      fullscreenActivated = true;
-    } else {
-      // 현재 씬에 선택지가 있으면 클릭으로 넘어가지 않음
-      const currentScene = scenes[sceneIndex];
-      if (!currentScene.choices) {
-        nextScene();
+  // 전체화면 버튼 이벤트 리스너
+  if (fullscreenToggleBtn) {
+    fullscreenToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 클릭 이벤트 전파 방지
+      toggleFullscreen();
+    });
+    fullscreenToggleBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFullscreen();
       }
+    });
+  }
+
+  // 전체화면 상태 변경 감지
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+  // 클릭으로 씬 진행 (전체화면 자동 전환 제거)
+  document.addEventListener('click', (e) => {
+    // 전체화면 버튼 클릭은 무시
+    if (e.target.closest('.fullscreen_toggle_btn')) {
+      return;
+    }
+
+    // 현재 씬에 선택지가 있으면 클릭으로 넘어가지 않음
+    const currentScene = scenes[sceneIndex];
+    if (!currentScene.choices) {
+      nextScene();
     }
   });
 
@@ -114,10 +171,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'ArrowLeft') goBack();
     if (e.key === 'F11') {
       e.preventDefault();
-      if (!fullscreenActivated) {
-        document.documentElement.requestFullscreen().catch(() => {});
-        fullscreenActivated = true;
-      }
+      toggleFullscreen();
     }
   });
 
@@ -160,11 +214,5 @@ window.addEventListener('DOMContentLoaded', async () => {
       sceneIndex = nextIdx;
       renderScene(sceneIndex);
     }
-  });
-
-  // 전체화면 변경 감지 (기존 그대로)
-  document.addEventListener('fullscreenchange', () => {
-    const modal = document.querySelector('.full_screen_alarm_modal');
-    modal.style.display = document.fullscreenElement ? 'none' : 'flex';
   });
 });
