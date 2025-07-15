@@ -4,6 +4,7 @@ let scenes = [];
 // 2) 전역변수
 let sceneIndex = 0;
 let fullscreenActivated = false;
+let currentImageClass = null; // 현재 활성화된 이미지 클래스 추적
 const wrapperEl = document.querySelector('#wrapper');
 const narrationEl = wrapperEl.querySelector('.narrate');
 const choiceContainerEl = wrapperEl.querySelector('.choice_container');
@@ -33,9 +34,34 @@ const drawSound = new Audio('./src/draw.mp3');
 // 4) 씬 렌더링 함수
 function renderScene(idx) {
   const scene = scenes[idx];
+
   if (scene.text)
     narrationEl.innerHTML = scene.text;
-  wrapperEl.className = `scene_${idx + 1}`;
+
+  // 기존 scene_idx 관련 클래스들 제거 (scene_1, scene_2 등)
+  const classList = Array.from(wrapperEl.classList);
+  classList.forEach(className => {
+    if (className.startsWith('scene_') && !className.startsWith('scene_img_')) {
+      wrapperEl.classList.remove(className);
+    }
+  });
+
+  // 새로운 scene_idx 클래스 추가
+  wrapperEl.classList.add(`scene_${idx + 1}`);
+
+  // 새로운 sceneNumber가 있을 때만 이미지 클래스 교체
+  if (scene.sceneNumber !== undefined) {
+    // 기존 이미지 클래스 제거
+    if (currentImageClass) {
+      wrapperEl.classList.remove(currentImageClass);
+    }
+
+    // 새로운 이미지 클래스 추가
+    const newImageClass = `scene_img_${scene.sceneNumber}`;
+    wrapperEl.classList.add(newImageClass);
+    currentImageClass = newImageClass;
+  }
+  // sceneNumber가 없으면 기존 이미지 클래스 유지
 
   if (scene.choices) {
     choiceContainerEl.style.display = 'block';
@@ -95,18 +121,41 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 선택지 클릭 핸들러 (기존과 동일)
+  // 선택지 클릭 핸들러
   choice1.addEventListener('click', (e) => {
     e.stopPropagation();
-    const nextIdx = scenes[sceneIndex].choices[0].next;
+    const choice = scenes[sceneIndex].choices[0];
+    const label = choice.label.toLowerCase();
+
+    // 스킵하기 관련 키워드 체크
+    if (label.includes('넘기') || label.includes('스킵') || label.includes('skip')) {
+      // main.html로 이동
+      window.location.href = './main.html';
+      return;
+    }
+
+    // 일반적인 씬 이동
+    const nextIdx = choice.next;
     if (nextIdx != null) {
       sceneIndex = nextIdx;
       renderScene(sceneIndex);
     }
   });
+
   choice2.addEventListener('click', (e) => {
     e.stopPropagation();
-    const nextIdx = scenes[sceneIndex].choices[1].next;
+    const choice = scenes[sceneIndex].choices[1];
+    const label = choice.label.toLowerCase();
+
+    // 스킵하기 관련 키워드 체크
+    if (label.includes('넘기') || label.includes('스킵') || label.includes('skip')) {
+      // main.html로 이동
+      window.location.href = './main.html';
+      return;
+    }
+
+    // 일반적인 씬 이동
+    const nextIdx = choice.next;
     if (nextIdx != null) {
       sceneIndex = nextIdx;
       renderScene(sceneIndex);

@@ -1277,7 +1277,7 @@ main section {
   height: auto;
   aspect-ratio: 4.5 / 2.5;
   position: absolute;
-  perspective: 62.5rem;
+  perspective: 1000px;
   bottom: 5.5rem;
   right: 9rem;
   background: #e7e7e7;
@@ -1550,13 +1550,14 @@ main section {
   z-index: 2;
   opacity: 0;
   background-color: #fff !important;
+  filter: grayscale(100%);
 }
 
 /* 현재 선택된 카드 바로 뒤에 있을 카드 */
 .portfolio_wrapper .content_thumbnail .p-card.card--next {
   z-index: 5;
   opacity: 1;
-  transform: translateY(-25px) translateX(15px) rotate(4deg) scale(0.95);
+  transform: translateY(-1.5rem) translateX(1.5rem) rotate(4deg) scale(0.95);
   height: 90%;
 }
 
@@ -2867,41 +2868,41 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
   transform-origin: center;
   white-space: nowrap;
   text-shadow:
-    1px 1px 0px #8B785D,
-    2px 2px 0px #6D5A47,
-    0 0 8px rgba(160, 145, 110, 0.4);
+    3px 3px 0px #8B785D,
+    3px 3px 0px #6D5A47,
+    0px 0 10px rgba(160, 145, 110, 0.4);
   transition: all 0.1s ease;
   will-change: transform, opacity, filter;
 }
 
 .contact_ring:nth-child(2) span {
   color: #B8A892;
-  font-size: 2.1rem;
+  font-size: 2.3rem;
   z-index: 999;
   text-shadow:
-    1px 1px 0px #9A8B74,
-    2px 2px 0px #7A6B58,
-    0 0 8px rgba(184, 168, 146, 0.4);
+    3px 3px 0px #9A8B74,
+    3px 3px 0px #7A6B58,
+    0px 0 10px rgba(184, 168, 146, 0.4);
 }
 
 .contact_ring:nth-child(3) span {
   color: #D2B48C;
-  font-size: 1.9rem;
+  font-size: 2.1rem;
   z-index: 888;
   text-shadow:
-    1px 1px 0px #C8A882,
-    2px 2px 0px #A08B6B,
-    0 0 8px rgba(210, 180, 140, 0.4);
+    3px 3px 0px #C8A882,
+    3px 3px 0px #A08B6B,
+    0px 0 10px rgba(210, 180, 140, 0.4);
 }
 
 .contact_ring:nth-child(4) span {
   color: #9A8B74;
-  font-size: 1.75rem;
+  font-size: 1.9rem;
   z-index: 777;
   text-shadow:
-    1px 1px 0px #8B785D,
-    2px 2px 0px #6D5A47,
-    0 0 8px rgba(154, 139, 116, 0.4);
+    3px 3px 0px #8B785D,
+    3px 3px 0px #6D5A47,
+    0px 0 10px rgba(154, 139, 116, 0.4);
 }
 
 /* 진입 애니메이션 클래스 */

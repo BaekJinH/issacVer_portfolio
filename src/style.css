@@ -154,8 +154,163 @@ main {
 
 
 /* 컷신 애니메이션 정리 */
-#wrapper.scene_1 .drawing_1 {}
+#wrapper .draw_el {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+  position: absolute;
+  width: 50%;
+  height: 90%;
+  top: 0;
+  left: 45%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
 
+#wrapper .draw_el::before,
+#wrapper .draw_el::after {
+  content: attr(data-origin);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 1;
+  animation: flicker 0.3s steps(1) infinite;
+  transform-origin: center;
+  color: rgb(170, 170, 170);
+}
+
+#wrapper .draw_el::before {
+  transform: rotate(357.3deg);
+}
+
+/* before 는 data-origin, after 는 data-alt */
+#wrapper .draw_el::after {
+  content: attr(data-alt);
+  animation-delay: 0.15s;
+  transform: rotate(357.5deg);
+  /* 절반 만큼 위상(딜레이) 이동 */
+}
+
+/* 씬별 이미지 변수 정의 */
+#wrapper.scene_img_0 {
+  --scene-image: url(./image/portfolio_scene_0.png);
+}
+
+#wrapper.scene_img_1 {
+  --scene-image: url(./image/portfolio_scene_1.png);
+}
+
+#wrapper.scene_img_2 {
+  --scene-image: url(./image/portfolio_scene_2.png);
+}
+
+#wrapper.scene_img_3 {
+  --scene-image: url(./image/portfolio_scene_3.png);
+}
+
+#wrapper.scene_img_4 {
+  --scene-image: url(./image/portfolio_scene_4.png);
+}
+
+#wrapper.scene_img_5 {
+  --scene-image: url(./image/portfolio_scene_5.png);
+}
+
+#wrapper.scene_img_6 {
+  --scene-image: url(./image/portfolio_scene_6.png);
+}
+
+#wrapper.scene_img_7 {
+  --scene-image: url(./image/portfolio_scene_7.png);
+}
+
+#wrapper.scene_img_8 {
+  --scene-image: url(./image/portfolio_scene_8.png);
+}
+
+#wrapper.scene_img_9 {
+  --scene-image: url(./image/portfolio_scene_9.png);
+}
+
+#wrapper.scene_img_10 {
+  --scene-image: url(./image/portfolio_scene_10.png);
+}
+
+#wrapper.scene_img_11 {
+  --scene-image: url(./image/portfolio_scene_11.png);
+}
+
+#wrapper.scene_img_12 {
+  --scene-image: url(./image/portfolio_scene_12.png);
+}
+
+#wrapper.scene_img_13 {
+  --scene-image: url(./image/portfolio_scene_13.png);
+}
+
+#wrapper.scene_img_14 {
+  --scene-image: url(./image/portfolio_scene_14.png);
+}
+
+/* 메인 배경 이미지 적용 */
+#wrapper[class*="scene_img_"] .drawing_0,
+#wrapper[class*="scene_img_"] .drawing_1,
+#wrapper[class*="scene_img_"] .drawing_2,
+#wrapper[class*="scene_img_"] .drawing_3,
+#wrapper[class*="scene_img_"] .drawing_4,
+#wrapper[class*="scene_img_"] .drawing_5,
+#wrapper[class*="scene_img_"] .drawing_6,
+#wrapper[class*="scene_img_"] .drawing_7,
+#wrapper[class*="scene_img_"] .drawing_8,
+#wrapper[class*="scene_img_"] .drawing_9,
+#wrapper[class*="scene_img_"] .drawing_10,
+#wrapper[class*="scene_img_"] .drawing_11,
+#wrapper[class*="scene_img_"] .drawing_12,
+#wrapper[class*="scene_img_"] .drawing_13,
+#wrapper[class*="scene_img_"] .drawing_14 {
+  /* background-image: var(--scene-image); */
+}
+
+/* ::before와 ::after에 자동으로 같은 이미지 적용 */
+#wrapper[class*="scene_img_"] .drawing_0::before,
+#wrapper[class*="scene_img_"] .drawing_0::after,
+#wrapper[class*="scene_img_"] .drawing_1::before,
+#wrapper[class*="scene_img_"] .drawing_1::after,
+#wrapper[class*="scene_img_"] .drawing_2::before,
+#wrapper[class*="scene_img_"] .drawing_2::after,
+#wrapper[class*="scene_img_"] .drawing_3::before,
+#wrapper[class*="scene_img_"] .drawing_3::after,
+#wrapper[class*="scene_img_"] .drawing_4::before,
+#wrapper[class*="scene_img_"] .drawing_4::after,
+#wrapper[class*="scene_img_"] .drawing_5::before,
+#wrapper[class*="scene_img_"] .drawing_5::after,
+#wrapper[class*="scene_img_"] .drawing_6::before,
+#wrapper[class*="scene_img_"] .drawing_6::after,
+#wrapper[class*="scene_img_"] .drawing_7::before,
+#wrapper[class*="scene_img_"] .drawing_7::after,
+#wrapper[class*="scene_img_"] .drawing_8::before,
+#wrapper[class*="scene_img_"] .drawing_8::after,
+#wrapper[class*="scene_img_"] .drawing_9::before,
+#wrapper[class*="scene_img_"] .drawing_9::after,
+#wrapper[class*="scene_img_"] .drawing_10::before,
+#wrapper[class*="scene_img_"] .drawing_10::after,
+#wrapper[class*="scene_img_"] .drawing_11::before,
+#wrapper[class*="scene_img_"] .drawing_11::after,
+#wrapper[class*="scene_img_"] .drawing_12::before,
+#wrapper[class*="scene_img_"] .drawing_12::after,
+#wrapper[class*="scene_img_"] .drawing_13::before,
+#wrapper[class*="scene_img_"] .drawing_13::after,
+#wrapper[class*="scene_img_"] .drawing_14::before,
+#wrapper[class*="scene_img_"] .drawing_14::after {
+  content: "";
+  background-image: var(--scene-image);
+  background-size: inherit;
+  background-position: inherit;
+  background-repeat: inherit;
+}
 
 /* --- 선택지 버튼 --- */
 #wrapper.scene_19 .choice_container .choice_el {
@@ -163,7 +318,7 @@ main {
   height: 100%;
   background: none;
   color: #43383A;
-  font-size: 1.5rem;
+  font-size: 1.85rem;
   font-weight: 700;
   border: none;
   animation: smokeText 1s ease-in-out forwards;
@@ -184,5 +339,19 @@ main {
   100% {
     opacity: 0;
     filter: blur(500px);
+  }
+}
+
+/* 깜빡임 keyframe */
+@keyframes flicker {
+
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
   }
 }
