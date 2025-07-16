@@ -435,6 +435,10 @@ main .fullscreen_text {
 }
 
 /* --- 선택지 버튼 --- */
+#wrapper.scene_19 .narration_container {
+  pointer-events: auto;
+}
+
 #wrapper.scene_19 .choice_container .choice_el {
   width: 100%;
   height: 100%;
