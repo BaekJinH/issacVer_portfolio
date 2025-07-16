@@ -605,7 +605,7 @@
   /**
    * 키보드 입력에 대한 시각적 피드백을 제공합니다.
    */
-  const handleKeyboardFeedback = () => {  
+  const handleKeyboardFeedback = () => {
     // 키와 span 요소 매핑
     const keyMapping = {
       'ArrowLeft': {
@@ -1250,7 +1250,15 @@
     rings.forEach((ring, ringIndex) => {
       const text = ring.getAttribute('data-text');
       const config = ringConfigs[ringIndex];
-      const letters = text.split('');
+      const lettersAndBr = [];
+      const parts = text.split(/(<br\s*\/?>)/i).filter(Boolean);
+      parts.forEach(part => {
+        if (part.match(/<br\s*\/?>/i)) {
+          lettersAndBr.push('<br>');
+        } else {
+          lettersAndBr.push(...part.split(''));
+        }
+      });
 
       // A. 각 detail_txt_wrapper의 p 태그에 텍스트 span 생성
       const wrapperSelector = `.detail_txt_wrapper_${ringIndex + 1} p`;
@@ -1258,11 +1266,15 @@
 
       if (targetWrapper) {
         targetWrapper.innerHTML = ''; // 기존 내용 제거
-        letters.forEach(char => {
+        lettersAndBr.forEach(item => {
           const span = document.createElement('span');
-          span.textContent = char === ' ' ? '\u00A0' : char; // 공백문자 처리
-          span.style.display = 'inline-block';
-          span.style.opacity = '0'; // 초기에는 숨김
+          if (item === '<br>') {
+            span.innerHTML = '<br>';
+          } else {
+            span.textContent = item === ' ' ? '\u00A0' : item;
+            span.style.display = 'inline-block';
+          }
+          span.style.opacity = '0';
           targetWrapper.appendChild(span);
         });
       }
@@ -1270,9 +1282,13 @@
       // B. 링 글자(span) 생성
       ring.innerHTML = '';
       ring.setAttribute('data-ring-index', ringIndex); // 링 인덱스 설정
-      letters.forEach((letterChar) => {
+      lettersAndBr.forEach((item) => {
         const span = document.createElement('span');
-        span.innerHTML = letterChar;
+        if (item === '<br>') {
+          span.innerHTML = ' '; // 링에서는 공백으로 처리
+        } else {
+          span.innerHTML = item;
+        }
         span.classList.add('preparing');
         span.setAttribute('data-ring-index', ringIndex); // 각 글자에도 링 인덱스 설정
         ring.appendChild(span);

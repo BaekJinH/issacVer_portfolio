@@ -549,7 +549,7 @@ main .keyboard_info_text p span:nth-of-type(6) {
 }
 
 /* 각 키의 순차적 진입 애니메이션 */
-main .keyboard_info_text p span:nth-of-type(1) {
+/* main .keyboard_info_text p span:nth-of-type(1) {
   animation-delay: 0.2s;
 }
 
@@ -571,7 +571,7 @@ main .keyboard_info_text p span:nth-of-type(5) {
 
 main .keyboard_info_text p span:nth-of-type(6) {
   animation-delay: 1.2s;
-}
+} */
 
 main .keyboard_info_text b {
   display: block;
@@ -2632,7 +2632,11 @@ main section {
   text-align: center;
   color: #43383A;
   font-size: 1.65rem;
-  font-weight: 6s00;
+  font-weight: 600;
+  text-shadow:
+    1px 1px 0px #D2B48C,
+    2px 2px 0px #B8A892,
+    0 0 8px rgba(222, 184, 135, 0.4);
 }
 
 /* wrapper가 활성화된 상태 */
@@ -2678,11 +2682,12 @@ main section {
 }
 
 .detail_txt_wrapper_2 p {
-  transform: rotate(10deg);
+  transform: rotate(10deg) translateX(1rem);
+  font-size: 1.1rem
 }
 
 .detail_txt_wrapper_3 p {
-  font-size: 1.3rem
+  font-size: 1.5rem
 }
 
 .detail_view_btn_wrapper {
@@ -5119,7 +5124,7 @@ main .keyboard_info_text p span.key-pressed.enter-key {
   }
 
   100% {
-    transform: scale(1.3) translateX(-3px);
+    transform: scale(1.3) translateX(0);
   }
 }
 
@@ -5134,7 +5139,7 @@ main .keyboard_info_text p span.key-pressed.enter-key {
   }
 
   100% {
-    transform: scale(1.3) translateX(3px);
+    transform: scale(1.3) translateX(0);
   }
 }
 
@@ -5149,7 +5154,7 @@ main .keyboard_info_text p span.key-pressed.enter-key {
   }
 
   100% {
-    transform: scale(1.3) translateY(-3px);
+    transform: scale(1.3) translateY(0);
   }
 }
 
@@ -5164,7 +5169,7 @@ main .keyboard_info_text p span.key-pressed.enter-key {
   }
 
   100% {
-    transform: scale(1.3) translateY(3px);
+    transform: scale(1.3) translateY(0);
   }
 }
 
