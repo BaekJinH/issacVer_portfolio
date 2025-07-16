@@ -159,10 +159,14 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 현재 씬에 선택지가 있으면 클릭으로 넘어가지 않음
     const currentScene = scenes[sceneIndex];
     if (!currentScene.choices) {
-      nextScene();
+      // 마지막 텍스트(씬)일 때
+      if (sceneIndex === scenes.length - 1) {
+        window.location.href = './main.html';
+      } else {
+        nextScene();
+      }
     }
   });
 

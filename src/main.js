@@ -605,7 +605,7 @@
   /**
    * 키보드 입력에 대한 시각적 피드백을 제공합니다.
    */
-  const handleKeyboardFeedback = () => {
+  const handleKeyboardFeedback = () => {  
     // 키와 span 요소 매핑
     const keyMapping = {
       'ArrowLeft': {
