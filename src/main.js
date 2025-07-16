@@ -541,10 +541,34 @@
   };
 
   /**
+   * 전체화면 상태를 확인하는 함수 (F11과 JavaScript API 모두 지원)
+   */
+  const isFullscreen = () => {
+    // JavaScript API로 전체화면 진입한 경우
+    if (document.fullscreenElement) {
+      return true;
+    }
+
+    // F11 키로 전체화면 진입한 경우 감지
+    // Firefox의 window.fullScreen 속성 확인
+    if (typeof window.fullScreen !== 'undefined' && window.fullScreen) {
+      return true;
+    }
+
+    // 화면 크기로 전체화면 여부 판단 (크로스 브라우저 대응)
+    if (window.outerHeight === window.screen.height &&
+      window.outerWidth === window.screen.width) {
+      return true;
+    }
+
+    return false;
+  };
+
+  /**
    * 전체화면 상태 변경 감지 및 UI 업데이트
    */
   const handleFullscreenChange = () => {
-    if (document.fullscreenElement) {
+    if (isFullscreen()) {
       fullscreenIcon.textContent = '⛸';
       fullscreenText.textContent = '창모드';
     } else {
@@ -562,10 +586,18 @@
         toggleFullscreen();
       }
     });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
   }
 
   // 전체화면 상태 변경 감지
   document.addEventListener('fullscreenchange', handleFullscreenChange);
+  // F11 키로 인한 전체화면 변화 감지 (resize 이벤트 사용)
+  window.addEventListener('resize', handleFullscreenChange);
 
   // 키보드 입력 시각적 피드백 시스템
   const keyboardInfoSpans = document.querySelectorAll('.keyboard_info_text p span');
@@ -2374,6 +2406,37 @@
 
     if (!pixelWindow || !iframe) return;
 
+    // GitHub, Notion 등 알려진 차단 사이트들은 바로 리다이렉트 메시지 표시
+    const blockedSites = ['github.com', 'notion.so', 'notion.site'];
+    const isBlockedSite = blockedSites.some(site => url.includes(site));
+
+    if (isBlockedSite) {
+      // 윈도우 제목 및 주소창 설정
+      windowTitleText.textContent = `${title} - Browser`;
+      addressText.textContent = url;
+
+      // 윈도우 열기 애니메이션
+      pixelWindow.classList.add('visible', 'opening');
+
+      // 애니메이션 완료 후 opening 클래스 제거
+      setTimeout(() => {
+        pixelWindow.classList.remove('opening');
+      }, 500);
+
+      // 포커스 설정
+      const closeBtn = pixelWindow.querySelector('.close-btn');
+      if (closeBtn) {
+        closeBtn.focus();
+      }
+
+      // 바로 리다이렉트 메시지 표시 (1초 후)
+      setTimeout(() => {
+        showRedirectMessage(url, windowBody, loadingIndicator);
+      }, 2000);
+
+      return;
+    }
+
     // 윈도우 제목 및 주소창 설정
     windowTitleText.textContent = `${title} - Browser`;
     addressText.textContent = url;
@@ -2385,15 +2448,56 @@
     // iframe 로드
     iframe.src = url;
 
+    // iframe 로딩 실패 감지 타이머 (2초로 단축)
+    const loadTimeout = setTimeout(() => {
+      if (!windowBody.classList.contains('loaded')) {
+        showRedirectMessage(url, windowBody, loadingIndicator);
+      }
+    }, 2000);
+
     // iframe 로드 완료 처리
     const handleIframeLoad = () => {
-      setTimeout(() => {
-        windowBody.classList.add('loaded');
-        loadingIndicator.style.display = 'none';
-      }, 1000); // 로딩 애니메이션을 위한 최소 시간
+      // iframe이 실제로 의미있는 콘텐츠를 로드했는지 확인
+      try {
+        // 동일 출처가 아닌 경우 접근 시 에러 발생 (정상적인 외부 사이트)
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+        // 문서에 접근할 수 있고 실제 내용이 있는 경우에만 성공으로 간주
+        if (iframeDoc && iframeDoc.body && iframeDoc.body.children.length > 0) {
+          clearTimeout(loadTimeout);
+          setTimeout(() => {
+            windowBody.classList.add('loaded');
+            loadingIndicator.style.display = 'none';
+          }, 1000);
+        } else {
+          // 빈 페이지이거나 내용이 없으면 차단된 것으로 간주
+          // 타이머는 그대로 두어서 3초 후 리다이렉트 메시지 표시
+        }
+      } catch (error) {
+        // 크로스 오리진 에러 - 정상적인 외부 사이트로 간주
+        if (error.name === 'SecurityError' || error.message.includes('cross-origin')) {
+          clearTimeout(loadTimeout);
+          setTimeout(() => {
+            windowBody.classList.add('loaded');
+            loadingIndicator.style.display = 'none';
+          }, 1000);
+        } else {
+          // 다른 에러는 로딩 실패로 간주
+          // 타이머 그대로 두기
+        }
+      }
+    };
+
+    // iframe 에러 처리
+    const handleIframeError = () => {
+      clearTimeout(loadTimeout);
+      showRedirectMessage(url, windowBody, loadingIndicator);
     };
 
     iframe.addEventListener('load', handleIframeLoad, {
+      once: true
+    });
+    iframe.addEventListener('error', handleIframeError, {
       once: true
     });
 
@@ -2413,21 +2517,147 @@
   };
 
   /**
+   * 픽셀 게임 느낌의 타이핑 효과
+   * @param {HTMLElement} element - 타이핑 효과를 적용할 요소
+   * @param {Function} [onComplete] - 타이핑 완료 후 실행할 콜백
+   */
+  const startTypingEffect = (element, onComplete) => {
+    if (!element) return;
+
+    const text = element.getAttribute('data-text');
+    const glitchChars = '█▓▒░▄▀■□▪▫◘◙☻☺♠♣♥♦•◦‣∅∞≡±≠≤≥∴∵∶∷∸∹∺∻∼∽∾∿≀≁≂≃';
+    let currentIndex = 0;
+
+    // 초기 상태: 빈 텍스트
+    element.textContent = '';
+    element.classList.add('typing-active');
+
+    const typeChar = () => {
+      if (currentIndex >= text.length) {
+        // 타이핑 완료
+        element.classList.remove('typing-active');
+        element.classList.add('typing-complete');
+        if (typeof onComplete === 'function') {
+          onComplete();
+        }
+        return;
+      }
+
+      const targetChar = text[currentIndex];
+
+      // 글리치 효과: 랜덤 글자 2-3개 보여주기
+      const glitchCount = Math.floor(Math.random() * 3) + 2;
+      let glitchStep = 0;
+
+      const showGlitch = () => {
+        if (glitchStep < glitchCount) {
+          // 랜덤 글리치 글자 표시
+          const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+          const currentText = element.textContent;
+          element.textContent = currentText.slice(0, currentIndex) + randomChar;
+
+          glitchStep++;
+          setTimeout(showGlitch, 50); // 50ms마다 글리치 변경
+        } else {
+          // 올바른 글자 표시
+          const currentText = element.textContent;
+          element.textContent = currentText.slice(0, currentIndex) + targetChar;
+          currentIndex++;
+
+          // 다음 글자로 진행 (속도 랜덤화)
+          const nextDelay = Math.random() * 80 + 20; // 80-100ms 사이
+          setTimeout(typeChar, nextDelay);
+        }
+      };
+
+      showGlitch();
+    };
+
+    // 타이핑 시작
+    typeChar();
+  };
+
+  /**
+   * blog 섹션 느낌의 리다이렉트 메시지 표시
+   * @param {string} url - 리다이렉트할 URL
+   * @param {HTMLElement} windowBody - 윈도우 바디 요소
+   * @param {HTMLElement} loadingIndicator - 로딩 인디케이터 요소
+   */
+  const showRedirectMessage = (url, windowBody, loadingIndicator) => {
+    // 로딩 인디케이터 숨기기
+    loadingIndicator.style.display = 'none';
+
+    // 리다이렉트 메시지 컨테이너 생성
+    const redirectMessage = document.createElement('div');
+    redirectMessage.className = 'redirect-message';
+
+    // blog 섹션 느낌의 픽셀아트 스타일 메시지
+    redirectMessage.innerHTML = `
+      <div class="redirect-content">
+        <div class="pixel-character">
+          <div class="pixel-face">
+            <span class="pixel-eye">●</span>
+            <span class="pixel-eye">●</span>
+            <div class="pixel-mouth">○</div>
+          </div>
+        </div>
+        <div class="redirect-text">
+          <p class="redirect-main-text" data-text="이런! 웹 사이트로 연결할게요!"></p>
+          <p class="redirect-emoji">:)</p>
+        </div>
+        <div class="redirect-loading">
+          <span class="loading-dot">●</span>
+          <span class="loading-dot">●</span>
+          <span class="loading-dot">●</span>
+        </div>
+      </div>
+    `;
+
+    // 윈도우 바디에 메시지 추가
+    windowBody.appendChild(redirectMessage);
+    windowBody.classList.add('redirecting');
+
+    // 타이핑 효과 시작 (0.5초 후)
+    setTimeout(() => {
+      startTypingEffect(
+        redirectMessage.querySelector('.redirect-main-text'),
+        () => {
+          setTimeout(() => {
+            window.open(url, '_blank');
+            closePixelWindow();
+          }, 500);
+        }
+      );
+    }, 500);
+  };
+
+  /**
    * 픽셀 윈도우 닫기
    */
   const closePixelWindow = () => {
     const pixelWindow = document.querySelector('#pixel_window');
     const iframe = document.querySelector('#pixel-iframe');
+    const windowBody = document.querySelector('.pixel-window-body');
 
     if (!pixelWindow) return;
 
     // 닫기 애니메이션
     pixelWindow.classList.remove('visible', 'opening', 'maximized');
 
-    // iframe 정리
+    // iframe과 리다이렉트 메시지 정리
     setTimeout(() => {
       if (iframe) {
         iframe.src = '';
+      }
+
+      if (windowBody) {
+        windowBody.classList.remove('loaded', 'redirecting');
+
+        // 리다이렉트 메시지 제거
+        const redirectMessage = windowBody.querySelector('.redirect-message');
+        if (redirectMessage) {
+          redirectMessage.remove();
+        }
       }
     }, 300);
   };

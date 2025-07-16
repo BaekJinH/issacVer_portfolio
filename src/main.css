@@ -458,7 +458,7 @@ main .keyboard_info_text p {
 main .keyboard_info_text p span {
   display: inline-block;
   position: relative;
-  margin: 0 0.3rem;
+  /* margin: 0 0.3rem; */
   transition: all 0.3s ease;
   animation: keyIdle 3s ease-in-out infinite;
 }
@@ -4198,6 +4198,330 @@ main.contact .contact_wrapper .detail_view_btn p span:nth-child(3) {
 
 .pixel-window.opening {
   animation: pixelWindowOpen 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* 리다이렉트 메시지 스타일 (blog 섹션 느낌) */
+.pixel-window-body.redirecting {
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.redirect-message {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: redirectGlitch 0.5s ease-in;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.redirect-content {
+  text-align: center;
+  font-family: 'LanaPixel', monospace;
+  color: #43383A;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  animation: redirectFadeIn 0.8s ease-out;
+}
+
+.pixel-character {
+  display: none;
+  animation: characterBounce 2s infinite ease-in-out;
+}
+
+.pixel-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px #43383A;
+}
+
+.pixel-eye {
+  color: #43383A;
+  display: inline-block;
+  margin: 0 0.2rem;
+  animation: eyeBlink 3s infinite;
+}
+
+.pixel-mouth {
+  font-size: 1.2rem;
+  color: #43383A;
+  margin-top: 0.3rem;
+  animation: mouthWiggle 2s infinite ease-in-out;
+}
+
+.redirect-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.redirect-main-text {
+  font-size: 1.45rem;
+  font-weight: 500;
+  color: #43383A;
+  margin: 0;
+  text-shadow: 0 0 8px #43383A;
+  position: relative;
+  min-height: 2rem;
+  letter-spacing: 0.1rem;
+}
+
+/* 타이핑 중 커서 효과 */
+.redirect-main-text.typing-active::after {
+  content: '█';
+  color: #43383A;
+  animation: cursorBlink 0.8s infinite;
+  text-shadow: 0 0 8px #43383A;
+}
+
+/* 타이핑 완료 후 효과 */
+.redirect-main-text.typing-complete {
+  animation: textGlow 1.5s infinite ease-in-out alternate,
+    pixelGlitch 0.5s ease-out,
+    textPulse 2s linear infinite;
+}
+
+.redirect-emoji {
+  font-size: 1.5rem;
+  color: #43383A;
+  margin: 0;
+  text-shadow: 0 0 10px #43383A;
+  animation: emojiRotate 2s infinite ease-in-out;
+}
+
+.redirect-loading {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.loading-dot {
+  color: #43383A;
+  font-size: 0.8rem;
+  animation: dotPulse 1.2s infinite ease-in-out;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes redirectGlitch {
+  0% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
+
+  25% {
+    filter: hue-rotate(90deg) brightness(1.5);
+  }
+
+  50% {
+    filter: hue-rotate(180deg) brightness(0.8);
+  }
+
+  75% {
+    filter: hue-rotate(270deg) brightness(1.2);
+  }
+
+  100% {
+    filter: hue-rotate(360deg) brightness(1);
+  }
+}
+
+@keyframes redirectFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes characterBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes eyeBlink {
+
+  0%,
+  90%,
+  100% {
+    opacity: 1;
+  }
+
+  95% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes mouthWiggle {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-5deg);
+  }
+
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 0 8px #43383A;
+  }
+
+  100% {
+    text-shadow: 0 0 15px #43383A, 0 0 25px #43383A;
+  }
+}
+
+@keyframes emojiRotate {
+
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(10deg) scale(1.1);
+  }
+}
+
+@keyframes dotPulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* 타이핑 효과 애니메이션 */
+@keyframes cursorBlink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pixelGlitch {
+  0% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+
+  10% {
+    transform: translateX(-2px) skewX(-5deg);
+    filter: hue-rotate(90deg);
+  }
+
+  20% {
+    transform: translateX(2px) skewX(5deg);
+    filter: hue-rotate(180deg);
+  }
+
+  30% {
+    transform: translateX(-1px) skewX(-2deg);
+    filter: hue-rotate(270deg);
+  }
+
+  40% {
+    transform: translateX(1px) skewX(2deg);
+    filter: hue-rotate(360deg);
+  }
+
+  50% {
+    transform: translateX(0) skewX(0deg);
+    filter: hue-rotate(0deg);
+    text-shadow:
+      -1px 0 #ff0040,
+      1px 0 #00ffff,
+      0 0 8px #43383A;
+  }
+
+  60% {
+    transform: translateX(-1px);
+    filter: hue-rotate(45deg);
+  }
+
+  80% {
+    transform: translateX(1px);
+    filter: hue-rotate(315deg);
+  }
+
+  100% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes textPulse {
+
+  0%,
+  100% {
+    text-shadow: 0 0 8px #43383A;
+  }
+
+  25% {
+    text-shadow:
+      0 0 12px #43383A,
+      0 0 20px #43383A40;
+  }
+
+  50% {
+    text-shadow:
+      0 0 15px #43383A,
+      0 0 25px #43383A60,
+      0 0 35px #43383A20;
+  }
+
+  75% {
+    text-shadow:
+      0 0 10px #43383A,
+      0 0 18px #43383A50;
+  }
 }
 
 /* 리스타트 */
