@@ -1620,11 +1620,11 @@ main section {
   transform: translateX(-50%) rotate(0.5deg);
   color: #6B5B47;
   font-family: 'LanaPixel', monospace;
-  font-size: 0.625rem;
+  font-size: 0.925rem;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
   background: #e7e7e7;
   border: 1px solid #D4C4A8;
-  padding: 0.625rem 1.125rem;
+  padding: 0.725rem 1.125rem;
   border-radius: 0;
   box-shadow:
     3px 3px 8px rgba(0, 0, 0, 0.2),
