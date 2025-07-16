@@ -23,6 +23,25 @@ body {
   font-family: 'LanaPixel', sans-serif;
 }
 
+body:after {
+  content: '';
+  background: url(./image/portfolio_scene_0.png);
+  background: url(./image/portfolio_scene_1.png);
+  background: url(./image/portfolio_scene_2.png);
+  background: url(./image/portfolio_scene_3.png);
+  background: url(./image/portfolio_scene_4.png);
+  background: url(./image/portfolio_scene_5.png);
+  background: url(./image/portfolio_scene_6.png);
+  background: url(./image/portfolio_scene_7.png);
+  background: url(./image/portfolio_scene_8.png);
+  background: url(./image/portfolio_scene_9.png);
+  background: url(./image/portfolio_scene_10.png);
+  background: url(./image/portfolio_scene_11.png);
+  background: url(./image/portfolio_scene_12.png);
+  background: url(./image/portfolio_scene_13.png);
+  background: url(./image/portfolio_scene_14.png);
+}
+
 *,
 *::before,
 *::after {
@@ -125,7 +144,8 @@ main {
 
 #wrapper .narration_container {
   width: 100%;
-  position: absolute;
+  position: fixed;
+  z-index: 1000;
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
@@ -424,13 +444,14 @@ main .fullscreen_text {
   font-weight: 700;
   border: none;
   animation: smokeText 1s ease-in-out forwards;
+  cursor: pointer;
 }
 
 
 @keyframes smokeText {
   0% {
-    opacity: 1;
-    filter: blur(20px);
+    opacity: 0;
+    filter: blur(500px);
   }
 
   80% {
@@ -439,8 +460,8 @@ main .fullscreen_text {
   }
 
   100% {
-    opacity: 0;
-    filter: blur(500px);
+    opacity: 1;
+    filter: blur(0);
   }
 }
 
