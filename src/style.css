@@ -146,7 +146,7 @@ main {
   width: 100%;
   position: fixed;
   z-index: 1000;
-  bottom: 2rem;
+  bottom: 5rem;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
@@ -159,6 +159,9 @@ main {
   z-index: 100;
   font-size: 3rem;
   pointer-events: none;
+  text-shadow: 1px 1px 0px #272727,
+    2px 2px 0px #a1a1a1,
+    0 0 8px rgba(37, 37, 37, 0.4);
 }
 
 
@@ -175,13 +178,12 @@ main {
 /* 전체화면 토글 버튼 */
 main .fullscreen_info_text {
   position: absolute;
-  bottom: 6rem;
-  left: 14.5rem;
+  top: 8rem;
+  left: 10.5rem;
   text-align: center;
   z-index: 999;
-  transform: rotate(21deg);
-  opacity: 0;
-  animation: fullscreenInfoEnter 2s ease-out 1.8s forwards;
+  transform: rotate(355deg);
+  opacity: 1;
 }
 
 main .fullscreen_toggle_btn {
@@ -439,28 +441,106 @@ main .fullscreen_text {
   pointer-events: auto;
 }
 
+#wrapper.scene_19 .choice_container {
+  margin-top: 2rem;
+  opacity: 0;
+  animation: smokeText .5s ease-in-out forwards;
+  display: flex !important;
+  flex-flow: column;
+  gap: .5rem;
+  align-items: center;
+  justify-content: center;
+}
+
 #wrapper.scene_19 .choice_container .choice_el {
-  width: 100%;
-  height: 100%;
   background: none;
   color: #43383A;
   font-size: 1.85rem;
   font-weight: 700;
   border: none;
-  animation: smokeText 1s ease-in-out forwards;
   cursor: pointer;
+  text-shadow: 1px 1px 0px #272727,
+    2px 2px 0px #a1a1a1,
+    0 0 8px rgba(37, 37, 37, 0.4);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* 픽셀 게임 스타일 호버 언더라인 */
+#wrapper.scene_19 .choice_container .choice_el::after {
+  content: '';
+  position: absolute;
+  bottom: -0.2rem;
+  left: 50%;
+  width: 0;
+  height: 0.25rem;
+  background: #43383A;
+  background-size: 0.5rem 0.25rem;
+  box-shadow:
+    0 0 0.5rem #FFD700,
+    0 0 1rem rgba(255, 215, 0, 0.5),
+    inset 0 0.125rem 0 rgba(255, 255, 255, 0.3),
+    inset 0 -0.125rem 0 rgba(0, 0, 0, 0.3);
+  transform: translateX(-50%);
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#wrapper.scene_19 .choice_container .choice_el:hover {
+  color: #FFD700;
+  text-shadow:
+    1px 1px 0px #272727,
+    2px 2px 0px #a1a1a1,
+    0 0 8px rgba(37, 37, 37, 0.4),
+    0 0 1rem #FFD700;
+  transform: scale(1.02);
+}
+
+#wrapper.scene_19 .choice_container .choice_el:hover::after {
+  width: 110%;
+}
+
+/* 픽셀 스타일 반짝임 애니메이션 */
+@keyframes pixelShimmer {
+
+  0%,
+  100% {
+    background-position: 0 0;
+    filter: brightness(1);
+  }
+
+  50% {
+    background-position: 0.5rem 0;
+    filter: brightness(1.3);
+  }
+}
+
+/* 픽셀 글로우 효과 */
+@keyframes pixelGlow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 0.5rem #FFD700,
+      0 0 1rem rgba(255, 215, 0, 0.5),
+      inset 0 0.125rem 0 rgba(255, 255, 255, 0.3),
+      inset 0 -0.125rem 0 rgba(0, 0, 0, 0.3);
+  }
+
+  50% {
+    box-shadow:
+      0 0 1rem #FF6B35,
+      0 0 2rem rgba(255, 107, 53, 0.7),
+      0 0 3rem rgba(255, 215, 0, 0.3),
+      inset 0 0.125rem 0 rgba(255, 255, 255, 0.5),
+      inset 0 -0.125rem 0 rgba(0, 0, 0, 0.5);
+  }
 }
 
 
 @keyframes smokeText {
   0% {
     opacity: 0;
-    filter: blur(500px);
-  }
-
-  80% {
-    filter: blur(500px);
-    opacity: 0;
+    filter: blur(20px);
   }
 
   100% {
