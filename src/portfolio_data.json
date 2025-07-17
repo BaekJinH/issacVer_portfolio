@@ -81,7 +81,7 @@
     {
       "title": "나쁜 감정 가게 팔기 페이지 개선",
       "img": "./image/portfolio/portfolio_img_7.png",
-      "link": "https://www.banggooso.com/intro.html?idx=260",
+      "link": "https://www.banggooso.com/es/sell/main.php",
       "contribution": "100",
       "useSkill": [
         { "skill": "CSS", "percentage": 100 },
@@ -92,20 +92,8 @@
       ]
     },
     {
-      "title": "나쁜 감정 가게 팔기 페이지 개선2222",
-      "img": "./image/portfolio/portfolio_img_8.png",
-      "link": "https://www.banggooso.com/es/sell/main.php",
-      "contribution": "100",
-      "useSkill": [
-        { "skill": "CSS", "percentage": 100 },
-        { "skill": "JavaScript", "percentage": 100 },
-        { "skill": "jQuery", "percentage": 20 },
-        { "skill": "Figma", "percentage": 90 }
-      ]
-    },
-    {
       "title": "무궁화 꽃을 피워주세요",
-      "img": "./image/portfolio/portfolio_img_9.png",
+      "img": "./image/portfolio/portfolio_img_8.png",
       "link": "https://www.banggooso.com/intro.html?idx=260",
       "contribution": "100",
       "useSkill": [
@@ -118,7 +106,7 @@
     },
     {
       "title": "여기는 기미년 조선, 그곳은 어디오?",
-      "img": "./image/portfolio/portfolio_img_10.png",
+      "img": "./image/portfolio/portfolio_img_9.png",
       "link": "https://www.banggooso.com/intro.html?idx=255",
       "contribution": "60",
       "useSkill": [
@@ -131,8 +119,8 @@
     },
     {
       "title": "2024년 국가교육위원회 홈페이지 유지보수 용역(p24-p91)",
-      "img": "./image/portfolio/portfolio_img_11.png",
-      "link": "",
+      "img": "./image/portfolio/portfolio_img_10.png",
+      "link": "https://www.ne.go.kr/index.do",
       "contribution": "100",
       "useSkill": [
         { "skill": "HTML", "percentage": 100 },
@@ -144,8 +132,8 @@
     },
     {
       "title": "한국장애인고용공단 차세대 통합정보시스템 구축 용역",
-      "img": "./image/portfolio/portfolio_img_12.png",
-      "link": "",
+      "img": "./image/portfolio/portfolio_img_11.png",
+      "link": "https://www.kead.or.kr/",
       "contribution": "100",
       "useSkill": [
         { "skill": "HTML", "percentage": 100 },
