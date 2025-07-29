@@ -1,5 +1,13 @@
 // fullscreenManager.js - 전체화면 관리 모듈
 
+import {
+  throttle
+} from './utils.js';
+
+// 전역 이벤트 핸들러 참조 저장 (정리를 위해)
+let fullscreenKeydownHandler = null;
+let throttledResizeHandler = null;
+
 /**
  * 전체화면 상태를 토글합니다.
  */
@@ -49,9 +57,9 @@ export const isFullscreen = () => {
 };
 
 /**
- * 전체화면 상태 변경 감지 및 UI 업데이트
+ * 전체화면 상태 변경 감지 및 UI 업데이트 (원본 함수)
  */
-const handleFullscreenChange = () => {
+const handleFullscreenChangeBase = () => {
   const fullscreenIcon = document.querySelector('.fullscreen_icon');
   const fullscreenText = document.querySelector('.fullscreen_text');
 
@@ -63,6 +71,9 @@ const handleFullscreenChange = () => {
     if (fullscreenText) fullscreenText.textContent = '전체화면';
   }
 };
+
+// throttle 적용: 리사이즈 이벤트를 150ms 간격으로 제한
+const handleFullscreenChange = throttle(handleFullscreenChangeBase, 150);
 
 /**
  * 전체화면 관리자 초기화
@@ -80,17 +91,48 @@ export const initFullscreenManager = () => {
       }
     });
 
-    // F11 키 이벤트 리스너
-    document.addEventListener('keydown', (e) => {
+    // F11 키 이벤트 리스너 (전역)
+    fullscreenKeydownHandler = (e) => {
       if (e.key === 'F11') {
         e.preventDefault();
         toggleFullscreen();
       }
-    });
+    };
+    document.addEventListener('keydown', fullscreenKeydownHandler);
   }
 
-  // 전체화면 상태 변경 감지
-  document.addEventListener('fullscreenchange', handleFullscreenChange);
-  // F11 키로 인한 전체화면 변화 감지 (resize 이벤트 사용)
-  window.addEventListener('resize', handleFullscreenChange);
+  // throttle 적용된 핸들러 참조 저장
+  throttledResizeHandler = handleFullscreenChange;
+
+  // 전체화면 상태 변경 감지 (throttle 적용)
+  document.addEventListener('fullscreenchange', handleFullscreenChangeBase); // fullscreenchange는 자주 발생하지 않으므로 원본 사용
+  // F11 키로 인한 전체화면 변화 감지 (resize 이벤트 사용 - throttle 적용)
+  window.addEventListener('resize', throttledResizeHandler); // resize는 throttle 적용
+};
+
+/**
+ * 전체화면 관리자 정리 (메모리 누수 방지)
+ */
+export const cleanupFullscreenManager = () => {
+  // 전역 이벤트 리스너 제거
+  if (fullscreenKeydownHandler) {
+    document.removeEventListener('keydown', fullscreenKeydownHandler);
+    fullscreenKeydownHandler = null;
+  }
+
+  if (throttledResizeHandler) {
+    window.removeEventListener('resize', throttledResizeHandler);
+    throttledResizeHandler = null;
+  }
+
+  // fullscreenchange 이벤트 제거
+  document.removeEventListener('fullscreenchange', handleFullscreenChangeBase);
+
+  // 버튼 이벤트 리스너 제거
+  const fullscreenToggleBtn = document.querySelector('.fullscreen_toggle_btn');
+  if (fullscreenToggleBtn) {
+    // 새로운 버튼 생성하여 모든 이벤트 리스너 제거 (cloneNode 방식)
+    const newBtn = fullscreenToggleBtn.cloneNode(true);
+    fullscreenToggleBtn.parentNode.replaceChild(newBtn, fullscreenToggleBtn);
+  }
 };

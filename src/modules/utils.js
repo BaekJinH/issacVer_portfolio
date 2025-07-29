@@ -1,6 +1,245 @@
 // utils.js - 공통 유틸리티 함수들
 
 /**
+ * 성능 최적화 유틸리티 함수들
+ */
+
+/**
+ * Throttle: 지정된 시간 간격으로만 함수 실행을 제한
+ * @param {Function} func - 실행할 함수
+ * @param {number} delay - 지연 시간 (밀리초)
+ * @returns {Function} - throttle이 적용된 함수
+ */
+export const throttle = (func, delay) => {
+  let timeoutId;
+  let lastExecTime = 0;
+
+  return function (...args) {
+    const currentTime = Date.now();
+
+    if (currentTime - lastExecTime > delay) {
+      func.apply(this, args);
+      lastExecTime = currentTime;
+    } else {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(this, args);
+        lastExecTime = Date.now();
+      }, delay - (currentTime - lastExecTime));
+    }
+  };
+};
+
+/**
+ * Debounce: 연속 호출 시 마지막 호출만 지연 후 실행
+ * @param {Function} func - 실행할 함수
+ * @param {number} delay - 지연 시간 (밀리초)
+ * @returns {Function} - debounce가 적용된 함수
+ */
+export const debounce = (func, delay) => {
+  let timeoutId;
+
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+};
+
+/**
+ * RAF를 활용한 애니메이션 최적화 래퍼
+ * @param {Function} func - 실행할 함수
+ * @returns {Function} - RAF가 적용된 함수
+ */
+export const rafThrottle = (func) => {
+  let rafId = null;
+
+  return function (...args) {
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        func.apply(this, args);
+        rafId = null;
+      });
+    }
+  };
+};
+
+/**
+ * 메모화 함수 (계산 결과 캐싱)
+ * @param {Function} func - 메모화할 함수
+ * @returns {Function} - 메모화된 함수
+ */
+export const memoize = (func) => {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = func.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+};
+
+/**
+ * 이벤트 리스너 안전 추가/제거 헬퍼
+ * @param {Element} element - 대상 요소
+ * @param {string} event - 이벤트 타입
+ * @param {Function} handler - 이벤트 핸들러
+ * @param {Object} options - 이벤트 옵션
+ */
+export const safeAddEventListener = (element, event, handler, options = {}) => {
+  if (!element || typeof handler !== 'function') {
+    console.warn('safeAddEventListener: 유효하지 않은 요소 또는 핸들러');
+    return null;
+  }
+
+  element.addEventListener(event, handler, options);
+
+  // 제거 함수 반환
+  return () => {
+    element.removeEventListener(event, handler, options);
+  };
+};
+
+/**
+ * 에러 핸들링 유틸리티 함수들
+ */
+
+/**
+ * 에러 타입별 분류
+ */
+export const ErrorTypes = {
+  NETWORK: 'NETWORK_ERROR',
+  PARSE: 'PARSE_ERROR',
+  NOT_FOUND: 'NOT_FOUND_ERROR',
+  PERMISSION: 'PERMISSION_ERROR',
+  VALIDATION: 'VALIDATION_ERROR',
+  UNKNOWN: 'UNKNOWN_ERROR'
+};
+
+/**
+ * 에러 타입 감지 함수
+ * @param {Error} error - 에러 객체
+ * @param {Response} response - fetch 응답 객체 (선택적)
+ * @returns {string} - 에러 타입
+ */
+export const getErrorType = (error, response = null) => {
+  // 네트워크 에러
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    return ErrorTypes.NETWORK;
+  }
+
+  // HTTP 상태 코드 기반 분류
+  if (response) {
+    if (response.status === 404) return ErrorTypes.NOT_FOUND;
+    if (response.status === 403 || response.status === 401) return ErrorTypes.PERMISSION;
+    if (response.status >= 500) return ErrorTypes.NETWORK;
+  }
+
+  // JSON 파싱 에러
+  if (error instanceof SyntaxError && error.message.includes('JSON')) {
+    return ErrorTypes.PARSE;
+  }
+
+  // 기본값
+  return ErrorTypes.UNKNOWN;
+};
+
+/**
+ * 사용자 친화적 에러 메시지 생성
+ * @param {string} errorType - 에러 타입
+ * @param {string} context - 에러 발생 맥락
+ * @returns {string} - 사용자 친화적 메시지
+ */
+export const getUserFriendlyMessage = (errorType, context = '') => {
+  const messages = {
+    [ErrorTypes.NETWORK]: `네트워크 연결을 확인해주세요. ${context} 데이터를 불러올 수 없습니다.`,
+    [ErrorTypes.NOT_FOUND]: `${context} 파일을 찾을 수 없습니다. 관리자에게 문의해주세요.`,
+    [ErrorTypes.PARSE]: `${context} 데이터 형식에 오류가 있습니다.`,
+    [ErrorTypes.PERMISSION]: `${context} 데이터에 접근할 권한이 없습니다.`,
+    [ErrorTypes.VALIDATION]: `${context} 데이터가 올바르지 않습니다.`,
+    [ErrorTypes.UNKNOWN]: `알 수 없는 오류가 발생했습니다. ${context}`
+  };
+
+  return messages[errorType] || messages[ErrorTypes.UNKNOWN];
+};
+
+/**
+ * 통합 에러 핸들러
+ * @param {Error} error - 에러 객체
+ * @param {string} context - 에러 발생 맥락
+ * @param {Response} response - fetch 응답 객체 (선택적)
+ * @param {Function} fallbackCallback - 폴백 처리 함수 (선택적)
+ */
+export const handleError = (error, context, response = null, fallbackCallback = null) => {
+  const errorType = getErrorType(error, response);
+  const userMessage = getUserFriendlyMessage(errorType, context);
+
+  // 개발자용 상세 로그
+  console.group(`🚨 ${context} 에러 발생`);
+  console.error('에러 타입:', errorType);
+  console.error('사용자 메시지:', userMessage);
+  console.error('원본 에러:', error);
+  if (response) {
+    console.error('응답 상태:', response.status, response.statusText);
+  }
+  console.groupEnd();
+
+  // 폴백 처리 실행
+  if (typeof fallbackCallback === 'function') {
+    try {
+      fallbackCallback(errorType, userMessage);
+    } catch (fallbackError) {
+      console.error('폴백 처리 중 에러:', fallbackError);
+    }
+  }
+
+  return {
+    type: errorType,
+    message: userMessage,
+    originalError: error
+  };
+};
+
+/**
+ * 안전한 JSON 페치 함수 (에러 핸들링 포함)
+ * @param {string} url - 요청 URL
+ * @param {string} context - 에러 발생 맥락
+ * @param {Function} fallbackCallback - 폴백 처리 함수
+ * @returns {Promise} - JSON 데이터 또는 에러 정보
+ */
+export const safeFetch = async (url, context = 'API', fallbackCallback = null) => {
+  try {
+    console.log(`📡 ${context} 데이터 요청: ${url}`);
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ ${context} 데이터 로드 성공`);
+
+    return {
+      success: true,
+      data
+    };
+
+  } catch (error) {
+    const errorInfo = handleError(error, context, null, fallbackCallback);
+    return {
+      success: false,
+      error: errorInfo
+    };
+  }
+};
+
+/**
  * 범용 리스트 네비게이션 핸들러 함수
  * @param {Event} e - 키보드 이벤트 객체
  * @param {HTMLElement[]} items - 탐색할 항목 요소들의 NodeList 또는 배열

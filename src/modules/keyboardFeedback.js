@@ -4,8 +4,12 @@ import {
   SECTION_CLASSES
 } from './constants.js';
 
+// 전역 이벤트 핸들러 참조 저장 (정리를 위해)
+let globalKeyDownHandler = null;
+let globalKeyUpHandler = null;
+
 /**
- * 키보드 입력에 대한 시각적 피드백을 제공합니다.
+ * 키보드 피드백 시스템 초기화
  */
 export const initKeyboardFeedback = () => {
   const keyboardInfoSpans = document.querySelectorAll('.keyboard_info_text p span');
@@ -76,7 +80,41 @@ export const initKeyboardFeedback = () => {
     }
   };
 
+  // 핸들러 참조 저장 (정리를 위해)
+  globalKeyDownHandler = handleKeyDown;
+  globalKeyUpHandler = handleKeyUp;
+
   // 이벤트 리스너 등록
-  document.addEventListener('keydown', handleKeyDown);
-  document.addEventListener('keyup', handleKeyUp);
+  document.addEventListener('keydown', globalKeyDownHandler);
+  document.addEventListener('keyup', globalKeyUpHandler);
+};
+
+/**
+ * 키보드 피드백 시스템 정리 (메모리 누수 방지)
+ */
+export const cleanupKeyboardFeedback = () => {
+  // 전역 이벤트 리스너 제거
+  if (globalKeyDownHandler) {
+    document.removeEventListener('keydown', globalKeyDownHandler);
+    globalKeyDownHandler = null;
+  }
+
+  if (globalKeyUpHandler) {
+    document.removeEventListener('keyup', globalKeyUpHandler);
+    globalKeyUpHandler = null;
+  }
+
+  // 활성화된 키 효과들 정리
+  const keyClasses = [
+    'key-pressed', 'key-pressed-top', 'key-pressed-bottom',
+    'key-pressed-left', 'key-pressed-right', 'key-pressed-tab',
+    'key-pressed-enter', 'key-pressed-esc', 'key-pressed-space'
+  ];
+
+  document.querySelectorAll('.key_top, .key_bottom, .key_left, .key_right, .key_tab, .key_enter, .key_esc, .key_space').forEach(keyElement => {
+    keyClasses.forEach(className => {
+      keyElement.classList.remove(className);
+    });
+    keyElement.removeAttribute('aria-pressed');
+  });
 };

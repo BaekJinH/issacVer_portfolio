@@ -4,6 +4,13 @@ import {
   PORTFOLIO_ITEM_HEIGHT_REM,
   PORTFOLIO_VIEW_COUNT
 } from './constants.js';
+import {
+  throttle,
+  rafThrottle,
+  handleError,
+  ErrorTypes,
+  safeFetch
+} from './utils.js';
 
 // 포트폴리오 섹션 상태 변수
 let portfolioData = [];
@@ -30,34 +37,182 @@ export const initPortfolioDOMElements = () => {
 };
 
 /**
- * 포트폴리오 데이터 불러오기
+ * 포트폴리오 데이터 불러오기 (강화된 에러 핸들링)
  */
 export const importPortfolio = async () => {
-  try {
-    console.log('📊 포트폴리오 데이터 로딩 중...');
-    const response = await fetch('src/portfolio_data.json'); // HTML 기준 경로
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: 데이터를 불러올 수 없습니다.`);
-    }
-    portfolioData = await response.json();
-    console.log('✅ 포트폴리오 데이터 로드 성공:', portfolioData[0]?.length, '개 항목');
-  } catch (error) {
-    console.error('❌ 데이터 로드 실패:', error);
-    // 데이터 로드 실패 시 기본 데이터로 대체 (이중 배열 구조)
-    portfolioData = [
-      [{
-        title: "데이터 로드 실패",
+  // 강화된 에러 핸들링을 위한 폴백 처리 함수
+  const handlePortfolioError = (errorType, userMessage) => {
+    // 에러 타입별 폴백 데이터 생성
+    const fallbackData = {
+      [ErrorTypes.NETWORK]: {
+        title: "네트워크 연결 오류",
         img: "",
         link: "#",
+        description: "인터넷 연결을 확인해주세요.",
         contribution: "0",
         useSkill: [{
-          skill: "Error",
+          skill: "네트워크 확인 필요",
           percentage: 0
         }]
+      },
+      [ErrorTypes.NOT_FOUND]: {
+        title: "파일을 찾을 수 없음",
+        img: "",
+        link: "#",
+        description: "포트폴리오 데이터 파일이 누락되었습니다.",
+        contribution: "0",
+        useSkill: [{
+          skill: "파일 확인 필요",
+          percentage: 0
+        }]
+      },
+      [ErrorTypes.PARSE]: {
+        title: "데이터 형식 오류",
+        img: "",
+        link: "#",
+        description: "포트폴리오 데이터 형식에 문제가 있습니다.",
+        contribution: "0",
+        useSkill: [{
+          skill: "데이터 검증 필요",
+          percentage: 0
+        }]
+      }
+    };
+
+    const defaultFallback = {
+      title: "데이터 로드 실패",
+      img: "",
+      link: "#",
+      description: "포트폴리오 데이터를 불러올 수 없습니다.",
+      contribution: "0",
+      useSkill: [{
+        skill: "오류 발생",
+        percentage: 0
       }]
+    };
+
+    // 에러 타입에 맞는 폴백 데이터 선택
+    const errorData = fallbackData[errorType] || defaultFallback;
+    portfolioData = [
+      [errorData]
     ];
+
+    // 사용자에게 알림 (선택적)
+    showUserNotification(userMessage, 'error');
+  };
+
+  // safeFetch 사용하여 안전한 데이터 로딩
+  const result = await safeFetch(
+    'src/portfolio_data.json',
+    '포트폴리오',
+    handlePortfolioError
+  );
+
+  if (result.success) {
+    portfolioData = result.data;
+    console.log('✅ 포트폴리오 데이터 검증 완료:', portfolioData[0]?.length, '개 항목');
+
+    // 데이터 유효성 검증
+    if (!validatePortfolioData(portfolioData)) {
+      handleError(
+        new Error('포트폴리오 데이터 유효성 검증 실패'),
+        '포트폴리오',
+        null,
+        (errorType, message) => handlePortfolioError(ErrorTypes.VALIDATION, message)
+      );
+    }
   }
+
   fetchPortfolio(); // 데이터 로드 후 포트폴리오 렌더링 시작
+};
+
+/**
+ * 포트폴리오 데이터 유효성 검증
+ * @param {Array} data - 검증할 데이터
+ * @returns {boolean} - 유효성 검증 결과
+ */
+const validatePortfolioData = (data) => {
+  try {
+    // 기본 구조 검증
+    if (!Array.isArray(data) || !data[0] || !Array.isArray(data[0])) {
+      console.warn('⚠️ 포트폴리오 데이터 구조가 올바르지 않습니다.');
+      return false;
+    }
+
+    const portfolioItems = data[0];
+
+    // 각 아이템 필수 필드 검증
+    const requiredFields = ['title', 'link'];
+    const validItems = portfolioItems.filter(item => {
+      return requiredFields.every(field =>
+        item.hasOwnProperty(field) && typeof item[field] === 'string'
+      );
+    });
+
+    if (validItems.length !== portfolioItems.length) {
+      console.warn(`⚠️ 일부 포트폴리오 아이템에 필수 필드가 누락되었습니다. (유효: ${validItems.length}/${portfolioItems.length})`);
+    }
+
+    return portfolioItems.length > 0;
+  } catch (error) {
+    console.error('포트폴리오 데이터 검증 중 오류:', error);
+    return false;
+  }
+};
+
+/**
+ * 사용자 알림 표시 (간단한 토스트 형태)
+ * @param {string} message - 표시할 메시지
+ * @param {string} type - 알림 타입 ('error', 'success', 'warning')
+ */
+const showUserNotification = (message, type = 'info') => {
+  // 기존 알림이 있다면 제거
+  const existingNotification = document.getElementById('portfolio-notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  const notification = document.createElement('div');
+  notification.id = 'portfolio-notification';
+  notification.className = `notification notification--${type}`;
+  notification.textContent = message;
+
+  // 스타일 적용
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'error' ? '#ff4444' : '#4CAF50'};
+    color: white;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 10000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease-out;
+  `;
+
+  document.body.appendChild(notification);
+
+  // 애니메이션으로 표시
+  requestAnimationFrame(() => {
+    notification.style.opacity = '1';
+    notification.style.transform = 'translateX(0)';
+  });
+
+  // 5초 후 자동 제거
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateX(100%)';
+
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
+    }
+  }, 5000);
 };
 
 /**
@@ -101,10 +256,10 @@ const handlePortfolioKeyDown = (e) => {
 };
 
 /**
- * 포트폴리오 휠 스크롤 이벤트 핸들러 (원본 기능 복원)
+ * 포트폴리오 휠 스크롤 이벤트 핸들러 (성능 최적화 적용)
  * @param {Event} e - 휠 이벤트
  */
-const handlePortfolioWheel = (e) => {
+const handlePortfolioWheelBase = (e) => {
   e.preventDefault();
 
   const portfolioItems = portfolioData[0];
@@ -126,6 +281,9 @@ const handlePortfolioWheel = (e) => {
     updatePortfolioSelection(newIndex);
   }
 };
+
+// 휠 이벤트에 throttle 적용 (100ms 간격으로 제한)
+const handlePortfolioWheel = throttle(handlePortfolioWheelBase, 100);
 
 /**
  * 포트폴리오 데이터를 li 요소로 생성하여 배치합니다.
@@ -200,23 +358,25 @@ const fetchPortfolio = () => {
     portfolioContentList.children[0].tabIndex = 0; // 첫 아이템만 포커스 가능
   }
 
-  // 2. 이벤트 리스너 등록 (이벤트 위임 사용)
+  // 2. 이벤트 리스너 등록 (성능 최적화 적용)
   portfolioClickHandler = handlePortfolioClick;
   portfolioKeyDownHandler = handlePortfolioKeyDown;
-  portfolioWheelHandler = handlePortfolioWheel;
+  portfolioWheelHandler = handlePortfolioWheel; // throttle 적용된 핸들러
 
   portfolioContentList.addEventListener('click', portfolioClickHandler);
   portfolioContentList.addEventListener('keydown', portfolioKeyDownHandler);
-  contentThumbnail.addEventListener('wheel', portfolioWheelHandler); // 휠 스크롤 기능 추가
+  contentThumbnail.addEventListener('wheel', portfolioWheelHandler, {
+    passive: false
+  }); // passive: false로 preventDefault 허용
 
   // 3. 초기 상태 설정
   updatePortfolioSelection(0);
 };
 
 /**
- * 포트폴리오 목록 보기 업데이트 (스크롤 위치 조정)
+ * 포트폴리오 목록 보기 업데이트 (스크롤 위치 조정) - RAF 최적화 적용
  */
-const updatePortfolioView = () => {
+const updatePortfolioViewBase = () => {
   if (!portfolioContentList || !portfolioListContainer) return;
 
   // 현재 선택된 아이템이 뷰포트 중앙에 오도록 스크롤 위치 조정
@@ -238,6 +398,9 @@ const updatePortfolioView = () => {
     behavior: 'smooth'
   });
 };
+
+// RAF로 스크롤 업데이트 최적화
+const updatePortfolioView = rafThrottle(updatePortfolioViewBase);
 
 /**
  * 기여도 바 UI를 업데이트하는 함수
@@ -417,7 +580,7 @@ const updatePortfolioSelection = (index, shouldFocus = true) => {
     currentItem.contribution
   );
 
-  // 스크롤 위치 업데이트
+  // 스크롤 위치 업데이트 (RAF 최적화 적용)
   updatePortfolioView();
 };
 
@@ -438,6 +601,12 @@ export const cleanupPortfolioSection = () => {
   if (contentThumbnail && portfolioWheelHandler) {
     contentThumbnail.removeEventListener('wheel', portfolioWheelHandler);
     portfolioWheelHandler = null;
+  }
+
+  // 알림 정리
+  const notification = document.getElementById('portfolio-notification');
+  if (notification) {
+    notification.remove();
   }
 };
 

@@ -25,7 +25,8 @@ import {
 import {
   initPortfolioDOMElements,
   importPortfolio,
-  initPortfolioSection
+  initPortfolioSection,
+  cleanupPortfolioSection
 } from './modules/portfolioSection.js';
 import {
   initContactSection
@@ -35,10 +36,12 @@ import {
   removeBlogNavigationListener
 } from './modules/blogSection.js';
 import {
-  initFullscreenManager
+  initFullscreenManager,
+  cleanupFullscreenManager
 } from './modules/fullscreenManager.js';
 import {
-  initKeyboardFeedback
+  initKeyboardFeedback,
+  cleanupKeyboardFeedback
 } from './modules/keyboardFeedback.js';
 
 !(function () {
@@ -159,7 +162,7 @@ import {
   };
 
   /**
-   * 실제 뒤로가기 처리 함수
+   * 실제 뒤로가기 처리 함수 (메모리 누수 방지 강화)
    */
   const performGoBack = () => {
     // 섹션별 리스너 제거 로직
@@ -171,6 +174,11 @@ import {
         // About 섹션 캐러셀 리스너 제거
         if (className === 'about') {
           removeAboutCarouselListener(sectionWrapper);
+        }
+
+        // Portfolio 섹션 정리 (새로 추가된 정리 함수)
+        if (className === 'portfolio') {
+          cleanupPortfolioSection();
         }
 
         // Blog 섹션 네비게이션 리스너 제거
@@ -233,6 +241,11 @@ import {
         }
       }
     });
+
+    // 전역 시스템 정리 (앱 종료 시)
+    // 주의: 이 정리들은 완전히 앱을 종료할 때만 수행해야 함
+    // cleanupKeyboardFeedback(); // 키보드 피드백은 항상 유지
+    // cleanupFullscreenManager(); // 풀스크린도 항상 유지
 
     restoreTabIndex();
     SECTION_CLASSES.forEach(className => mainElement.classList.remove(className));
@@ -382,4 +395,11 @@ import {
 
   // 포트폴리오 데이터 불러오기
   importPortfolio();
+
+  // 페이지 언로드 시 완전한 정리 (메모리 누수 방지)
+  window.addEventListener('beforeunload', () => {
+    cleanupKeyboardFeedback();
+    cleanupFullscreenManager();
+    cleanupPortfolioSection();
+  });
 })();

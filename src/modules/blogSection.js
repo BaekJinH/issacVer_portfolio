@@ -1,68 +1,54 @@
-// blogSection.js - Blog 섹션 모듈
+// blogSection.js - 블로그 섹션 모듈
 
 import {
-  handleListNavigation,
-  startTypingEffect,
-  typewriterEffect
+  handleListNavigation
+} from './utils.js';
+import {
+  debounce,
+  throttle
 } from './utils.js';
 
-// Blog 섹션 상태 변수
+// 블로그 섹션 상태 변수
 let currentBlogIconIndex = 0;
-let blogKeyDownHandler = null;
+let blogIcons = [];
+let filteredIcons = [];
+let isAnimating = false;
 
 /**
- * 블로그 섹션 초기화 - 화면 전체 글리치 효과
+ * 블로그 섹션 초기화
  * @param {HTMLElement} wrapper - 블로그 섹션 래퍼 요소
  */
 export const initBlogSection = (wrapper) => {
-  const screenWrapper = wrapper.querySelector('.screen_wrapper');
-  const screenInner = wrapper.querySelector('.screen_inner');
-  if (!screenInner) return;
+  if (!wrapper) return;
 
-  // CSS로 정의된 배경색을 정확하게 가져오기
-  const computedStyle = window.getComputedStyle(screenInner);
-  let backgroundColor = computedStyle.backgroundColor;
-
-  // 배경색이 투명하거나 없으면 기본값 설정
-  if (!backgroundColor || backgroundColor === 'rgba(0, 0, 0, 0)' || backgroundColor === 'transparent') {
-    backgroundColor = '#999'; // 블로그 래퍼의 배경색과 동일하게
+  const backBtn = wrapper.querySelector('.back_btn');
+  if (backBtn) {
+    // 포커스를 백 버튼으로 설정
+    backBtn.focus();
   }
 
-  // html2canvas로 .screen_wrapper 요소를 캡처
-  html2canvas(screenWrapper, {
-    backgroundColor: backgroundColor,
-    useCORS: true,
-    allowTaint: true,
-    scale: 1,
-    logging: false,
-    removeContainer: true
-  }).then(canvas => {
-    // 캡처가 완료되면, 생성된 canvas에 글리치 효과를 적용
-    applyGlitchEffect(canvas);
+  // Tab 키로 검색창에 접근할 수 있도록 tabindex 설정
+  const searchInput = wrapper.querySelector('.searchbox');
+  if (searchInput) {
+    searchInput.tabIndex = 0;
+  }
 
-    // 캡처 후 원래대로 숨김
-    const mainElement = document.querySelector('main');
-    wrapper.style.transition = 'transform 0.3s ease-in-out';
-    mainElement.classList.remove('blog');
-    setTimeout(() => mainElement.classList.add('blog'), 20);
+  // 블로그 네비게이션 초기화
+  initBlogNavigation(wrapper);
 
-    // 블로그 섹션 네비게이션 초기화
-    initBlogNavigation(wrapper);
+  // 검색 기능 초기화
+  initBlogSearchFeature(wrapper, blogIcons);
 
-    // 뒤로가기 버튼에 포커스 설정 (기본 동작)
-    const backBtn = wrapper.querySelector('.back_btn');
-    if (backBtn) {
-      backBtn.focus();
-    }
+  // html2canvas를 사용한 글리치 효과
+  if (typeof html2canvas !== 'undefined') {
+    const applyGlitchEffectThrottled = throttle((wrapper) => {
+      applyGlitchEffect(wrapper);
+    }, 200); // 200ms 간격으로 제한
 
-    // Tab 키로 검색창에 접근할 수 있도록 tabindex 설정
-    const searchInput = wrapper.querySelector('.search_wrapper input');
-    if (searchInput) {
-      searchInput.tabIndex = 0;
-    }
-  }).catch(error => {
-    console.error('html2canvas 에러:', error);
-  });
+    setTimeout(() => {
+      applyGlitchEffectThrottled(wrapper);
+    }, 500);
+  }
 };
 
 /**
@@ -100,7 +86,7 @@ const applyGlitchEffect = (canvas) => {
  */
 const initBlogNavigation = (wrapper) => {
   // 네비게이션 가능한 아이콘들 선택 (뒤로가기 버튼 제외)
-  const blogIcons = wrapper.querySelectorAll('.screen_inner ul li a');
+  blogIcons = wrapper.querySelectorAll('.screen_inner ul li a');
   if (blogIcons.length === 0) return;
 
   // 초기 인덱스 설정
@@ -181,7 +167,7 @@ const initBlogNavigation = (wrapper) => {
    * 블로그 섹션 키보드 이벤트 핸들러
    * @param {KeyboardEvent} e - 키보드 이벤트
    */
-  blogKeyDownHandler = (e) => {
+  const blogKeyDownHandler = (e) => {
     // 뒤로가기 버튼에 포커스가 있으면 방향키 처리 안함
     if (document.activeElement === wrapper.querySelector('.back_btn')) {
       return;
@@ -277,18 +263,18 @@ export const removeBlogNavigationListener = (wrapper) => {
  * 스킬 데이터를 JSON 파일에서 로드
  * @returns {Promise<Array>} 스킬 데이터 배열
  */
-  const loadSkillData = async () => {
-    try {
-      const response = await fetch('src/skillList.json'); // HTML 기준 경로
-      if (!response.ok) {
-        throw new Error('스킬 데이터를 불러올 수 없습니다.');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('스킬 데이터 로드 실패:', error);
-      throw error;
+const loadSkillData = async () => {
+  try {
+    const response = await fetch('src/skillList.json'); // HTML 기준 경로
+    if (!response.ok) {
+      throw new Error('스킬 데이터를 불러올 수 없습니다.');
     }
-  };
+    return await response.json();
+  } catch (error) {
+    console.error('스킬 데이터 로드 실패:', error);
+    throw error;
+  }
+};
 
 /**
  * 스킬 리스트 UI 생성
@@ -381,12 +367,14 @@ const createErrorSkillList = () => {
 
 /**
  * 블로그 검색 기능 초기화
- * @param {HTMLElement} wrapper - 블로그 섹션 래퍼 요소
- * @param {NodeList} blogIcons - 검색 대상 아이콘들
+ * @param {HTMLElement} wrapper - 블로그 래퍼 요소
+ * @param {HTMLElement[]} blogIcons - 블로그 아이콘 요소들
  */
 const initBlogSearchFeature = (wrapper, blogIcons) => {
-  const searchInput = wrapper.querySelector('.search_wrapper input');
-  const focusInfoTxt = wrapper.querySelector('.search_wrapper .focus_info_txt');
+  const searchInput = wrapper.querySelector('.searchbox');
+  const searchResultCount = wrapper.querySelector('.search-count');
+  const focusInfoTxt = wrapper.querySelector('.focus_info_txt');
+
   if (!searchInput) return;
 
   // 검색 가능한 아이콘 데이터 생성
@@ -413,7 +401,7 @@ const initBlogSearchFeature = (wrapper, blogIcons) => {
     };
   });
 
-  let filteredIcons = [...searchableIcons];
+  filteredIcons = [...searchableIcons];
 
   /**
    * 검색 결과에 따라 아이콘들 필터링
@@ -539,13 +527,16 @@ const initBlogSearchFeature = (wrapper, blogIcons) => {
   };
 
   /**
-   * 검색 입력 이벤트 핸들러
+   * 검색 입력 이벤트 핸들러 (debounce 적용 전 원본)
    * @param {Event} e - 입력 이벤트
    */
-  const handleSearchInput = (e) => {
+  const handleSearchInputBase = (e) => {
     const searchTerm = e.target.value;
     filterIcons(searchTerm);
   };
+
+  // debounce 적용: 입력 후 300ms 대기 후 검색 실행
+  const handleSearchInput = debounce(handleSearchInputBase, 300);
 
   /**
    * 검색창에서의 키보드 이벤트 핸들러
@@ -576,7 +567,7 @@ const initBlogSearchFeature = (wrapper, blogIcons) => {
     }
   };
 
-  // 이벤트 리스너 등록
+  // 이벤트 리스너 등록 (debounce 적용된 핸들러 사용)
   searchInput.addEventListener('input', handleSearchInput);
   searchInput.addEventListener('keydown', handleSearchKeydown);
 
