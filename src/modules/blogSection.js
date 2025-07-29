@@ -277,18 +277,18 @@ export const removeBlogNavigationListener = (wrapper) => {
  * 스킬 데이터를 JSON 파일에서 로드
  * @returns {Promise<Array>} 스킬 데이터 배열
  */
-  const loadSkillData = async () => {
-    try {
-      const response = await fetch('src/skillList.json'); // HTML 기준 경로
-      if (!response.ok) {
-        throw new Error('스킬 데이터를 불러올 수 없습니다.');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('스킬 데이터 로드 실패:', error);
-      throw error;
+const loadSkillData = async () => {
+  try {
+    const response = await fetch('src/skillList.json'); // HTML 기준 경로
+    if (!response.ok) {
+      throw new Error('스킬 데이터를 불러올 수 없습니다.');
     }
-  };
+    return await response.json();
+  } catch (error) {
+    console.error('스킬 데이터 로드 실패:', error);
+    throw error;
+  }
+};
 
 /**
  * 스킬 리스트 UI 생성
