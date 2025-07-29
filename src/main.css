@@ -1498,6 +1498,7 @@ main section {
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
   transform: rotate(0.3deg);
   display: inline-block;
+  margin-left: 0.5rem;
 }
 
 .portfolio_wrapper .use_skill_list .no-skills {
@@ -1610,6 +1611,7 @@ main section {
   z-index: 10;
   opacity: 1;
   transform: rotate(-1deg) translateX(0%) scale(1);
+  cursor: pointer;
 }
 
 /* 포트폴리오 설명 텍스트 */

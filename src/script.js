@@ -13,7 +13,7 @@ const choice2 = wrapperEl.querySelector('.choice_2');
 // 3) JSON 데이터 로드 함수
 async function loadScenes() {
   try {
-    const response = await fetch('./src/scenes.json');
+    const response = await fetch('src/scenes.json'); // HTML 기준 경로
     if (!response.ok) {
       throw new Error('씬 데이터를 불러올 수 없습니다.');
     }
